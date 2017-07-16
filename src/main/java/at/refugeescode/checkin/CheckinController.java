@@ -35,7 +35,7 @@ public class CheckinController {
 
     @GetMapping("/people/{uid}/checkin")
     @Transactional
-    public ResponseEntity<Checkin> checkin(@PathVariable("uid") String uid) {
+    public ResponseEntity<Boolean> checkin(@PathVariable("uid") String uid) {
 
         Person person = personRepository.findByUid(uid);
 
@@ -44,7 +44,7 @@ public class CheckinController {
 
         Checkin checkin = checkinRepository.save(new Checkin(person, LocalDateTime.now(), !isCheckedIn(person)));
 
-        return new ResponseEntity<>(checkin, HttpStatus.OK);
+        return new ResponseEntity<>(checkin.isCheckedIn(), HttpStatus.OK);
     }
 
     @GetMapping("/people/{uid}/status")

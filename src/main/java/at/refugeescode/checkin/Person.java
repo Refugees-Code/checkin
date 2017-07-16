@@ -25,4 +25,9 @@ public class Person {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @NonNull
+    @NotBlank
+    @Column(nullable = false, unique = true)
+    private String uid;
+
 }

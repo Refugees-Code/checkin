@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@RequiredArgsConstructor
 @ToString
 public class Checkin {
 
@@ -25,4 +24,11 @@ public class Checkin {
     @NonNull
     private LocalDateTime time;
 
+    private boolean checkedIn;
+
+    public Checkin(Person person, LocalDateTime time, boolean checkedIn) {
+        this.person = person;
+        this.time = time;
+        this.checkedIn = checkedIn;
+    }
 }

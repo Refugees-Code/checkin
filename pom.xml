@@ -80,6 +80,17 @@
 			<artifactId>slack-webhook</artifactId>
 			<version>1.2.1</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.sun.mail</groupId>
+			<artifactId>javax.mail</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.codehaus.janino</groupId>
+			<artifactId>janino</artifactId>
+		</dependency>
+
 	</dependencies>
 
 	<build>

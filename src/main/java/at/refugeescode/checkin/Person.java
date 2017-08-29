@@ -25,6 +25,12 @@ public class Person {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Column
+    private String email;
+
+    @Column
+    private String slackHandle;
+
     @NonNull
     @NotBlank
     @Column(nullable = false, unique = true)

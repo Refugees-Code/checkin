@@ -10,11 +10,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
 @Slf4j
 public class CheckinController {
+
+    public static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.YYYY HH:mm");
 
     private PersonRepository personRepository;
 
@@ -42,7 +45,16 @@ public class CheckinController {
         if (person == null)
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
-        Checkin checkin = checkinRepository.save(new Checkin(person, LocalDateTime.now(), !isCheckedIn(person)));
+        LocalDateTime now = LocalDateTime.now();
+        boolean checkedIn = !isCheckedIn(person);
+
+        Checkin checkin = checkinRepository.save(new Checkin(person, now, checkedIn));
+
+        log.info(SlackAppender.POST_TO_SLACK, "User '{}' has checked {} at {}",
+                person.getName(),
+                checkedIn ? "in" : "out",
+                now.format(dateTimeFormatter)
+        );
 
         return new ResponseEntity<>(checkin.isCheckedIn(), HttpStatus.OK);
     }

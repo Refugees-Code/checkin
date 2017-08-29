@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <appender name="slack" class="at.refugeescode.checkin.SlackAppender">
+        <webhookURL>https://hooks.slack.com/services/xxxxxxxxx/xxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxx</webhookURL>
+        <channel>#general</channel>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%msg%n</pattern>
+        </layout>
+        <username>${HOSTNAME}</username>
+        <icon>:briefcase:</icon>
+        <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+            <marker>POST_TO_SLACK</marker>
+        </evaluator>
+    </appender>
+    <root>
+        <appender-ref ref="slack" />
+    </root>
+
+</configuration>

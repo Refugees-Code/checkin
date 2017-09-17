@@ -13,14 +13,12 @@
         <cyclicBufferTracker class="ch.qos.logback.core.spi.CyclicBufferTracker">
             <bufferSize>1</bufferSize>
         </cyclicBufferTracker>
-        <evaluator class="ch.qos.logback.classic.boolex.JaninoEventEvaluator">
-            <expression>
-                return (marker != null &amp;&amp; marker.contains("SEND_MAIL"));
-            </expression>
+        <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+            <marker>SEND_MAIL</marker>
         </evaluator>
     </appender>
 
-    <appender name="slack" class="at.refugeescode.checkin.SlackAppender">
+    <appender name="slack" class="at.refugeescode.checkin.config.SlackAppender">
         <webhookURL>https://hooks.slack.com/services/xxxxxxxxx/xxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxx</webhookURL>
         <channel>#general</channel>
         <layout class="ch.qos.logback.classic.PatternLayout">

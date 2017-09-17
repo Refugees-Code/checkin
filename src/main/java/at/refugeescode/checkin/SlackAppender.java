@@ -6,11 +6,15 @@ import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.boolex.EvaluationException;
 import ch.qos.logback.core.boolex.EventEvaluator;
+import lombok.Getter;
+import lombok.Setter;
 import net.gpedro.integrations.slack.SlackApi;
 import net.gpedro.integrations.slack.SlackMessage;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+@Getter
+@Setter
 public class SlackAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
     /**
@@ -18,8 +22,9 @@ public class SlackAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
      */
     public static final Marker POST_TO_SLACK = MarkerFactory.getMarker("POST_TO_SLACK");
 
-    private static final PatternLayout DEFAULT_LAYOUT = new PatternLayout();
+    private static final PatternLayout DEFAULT_LAYOUT;
     static {
+        DEFAULT_LAYOUT = new PatternLayout();
         DEFAULT_LAYOUT.setPattern("%-5level [%thread]: %message%n");
     }
 
@@ -59,57 +64,6 @@ public class SlackAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
         } catch (EvaluationException ex) {
             addError("Exception in appender '" + name + "'.", ex);
         }
-    }
-
-    public String getWebhookURL() {
-        return webhookURL;
-    }
-
-    public void setWebhookURL(String webhookURL) {
-        this.webhookURL = webhookURL;
-    }
-
-    public String getChannel() {
-        return channel;
-    }
-
-    public void setChannel(String channel) {
-        this.channel = channel;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getIcon() {
-        return icon;
-    }
-
-    public void setIcon(String icon) {
-        this.icon = icon;
-        if (this.icon != null && this.icon.startsWith(":") && !this.icon.endsWith(":")) {
-            this.icon += ":";
-        }
-    }
-
-    public Layout<ILoggingEvent> getLayout() {
-        return layout;
-    }
-
-    public void setLayout(Layout<ILoggingEvent> layout) {
-        this.layout = layout;
-    }
-
-    public EventEvaluator<ILoggingEvent> getEvaluator() {
-        return evaluator;
-    }
-
-    public void setEvaluator(EventEvaluator<ILoggingEvent> evaluator) {
-        this.evaluator = evaluator;
     }
 
 }

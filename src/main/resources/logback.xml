@@ -10,7 +10,7 @@
         <username>${spring.mail.username}</username>
         <password>${spring.mail.password}</password>
         <from>${checkin.mail.from}</from>
-        <to>${checkin.mail.admin}</to>
+        <to>${checkin.mail.to}</to>
         <layout class="ch.qos.logback.classic.html.HTMLLayout" />
         <cyclicBufferTracker class="ch.qos.logback.core.spi.CyclicBufferTracker">
             <bufferSize>1</bufferSize>
@@ -35,7 +35,7 @@
 
     <root>
         <appender-ref ref="smtp" />
-        <appender-ref ref="slack" />
+        <!--<appender-ref ref="slack" />-->
     </root>
 
 </configuration>

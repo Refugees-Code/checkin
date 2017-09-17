@@ -1,7 +1,6 @@
 package at.refugeescode.checkin.domain;
 
 import lombok.*;
-import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
 import javax.persistence.Column;
@@ -14,7 +13,7 @@ import javax.persistence.Id;
 @Setter
 @NoArgsConstructor
 @RequiredArgsConstructor
-@ToString
+@ToString(of = {"uid", "name", "email"})
 public class Person {
 
     @Id
@@ -26,15 +25,16 @@ public class Person {
     @Column(nullable = false, unique = true)
     private String uid;
 
+    @NonNull
     @NotBlank
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String name;
 
-    @Email
-    @Column(unique = true)
+    @NonNull
+    @NotBlank
+    @Column(nullable = false, unique = true)
     private String email;
 
-    @NotBlank
     @Column
     private String slackHandle;
 

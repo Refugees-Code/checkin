@@ -31,10 +31,6 @@ public class MailService {
 
     @NonNull
     private final JavaMailSender mailSender;
-//    @NonNull
-//    private final PersonRepository personRepository;
-//    @NonNull
-//    private final CheckinRepository checkinRepository;
 
     @Value("${checkin.mail.enabled}")
     private boolean enabled;
@@ -82,20 +78,4 @@ public class MailService {
             }
         }
     }
-
-    @Scheduled(fixedDelay = 60*1000)
-    public void sendTestMail() {
-        log.info("sending test mail");
-        sendMail("alex@refugeescode.at", "darioseidl@fastmail.fm", null, null, "Test", "Test");
-    }
-
-//    @Scheduled(cron = "0 0 8 * * SUN") //every sunday at 08:00
-//    public void sendWeekyMail() {
-//
-//        for (Person person : personRepository.findAll()) {
-//
-//            // TODO: send mail to user with summary of hours during the last week
-//            // TODO: send mail to admin/tutor with summary of hours / user during the last week
-//        }
-//    }
 }

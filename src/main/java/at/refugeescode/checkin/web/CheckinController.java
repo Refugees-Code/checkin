@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -33,8 +34,13 @@ public class CheckinController {
     @NonNull
     private final CheckinRepository checkinRepository;
 
+    private Optional<Checkin> lastCheckin(Person person) {
+        List<Checkin> checkins = checkinRepository.findByPersonOrderByTime(person);
+        return checkins.isEmpty() ? Optional.empty() : Optional.of(checkins.get(checkins.size() - 1));
+    }
+
     private boolean isCheckedIn(Person person) {
-        Optional<Checkin> lastCheckinOptional = checkinRepository.findLastByPersonOrderByTime(person);
+        Optional<Checkin> lastCheckinOptional = lastCheckin(person);
         return lastCheckinOptional.isPresent() && lastCheckinOptional.get().isCheckedIn();
     }
 
@@ -45,26 +51,27 @@ public class CheckinController {
         Person person = personRepository.findByUid(uid);
 
         if (person == null) {
-            person = personRepository.save(new Person(uid));
+            String placeholder = "new-user-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
+            person = personRepository.save(new Person(uid, placeholder, placeholder));
         }
 
-        Optional<Checkin> lastCheckinOptional = checkinRepository.findLastByPersonOrderByTime(person);
+        Optional<Checkin> lastCheckinOptional = lastCheckin(person);
         LocalDateTime now = LocalDateTime.now();
         Checkin checkin;
 
-        if (lastCheckinOptional.isPresent()) {
+        if (!lastCheckinOptional.isPresent()) {
+            checkin = new Checkin(person, now, Duration.ZERO, true);
+        }
+        else {
             Checkin lastCheckin = lastCheckinOptional.get();
             Duration duration = Duration.between(lastCheckin.getTime(), now);
             checkin = new Checkin(person, now, duration, !lastCheckin.isCheckedIn());
-        }
-        else {
-            checkin = new Checkin(person, now, Duration.ZERO, true);
         }
 
         checkin = checkinRepository.save(checkin);
 
         log.info(SlackAppender.POST_TO_SLACK, "{} has checked {} at {}",
-                person.getName() == null ? "A new user" : "User ' " + person.getName() + "'",
+                person.getName() == null ? "A new user" : "User '" + person.getName() + "'",
                 checkin.isCheckedIn() ? "in" : "out",
                 now.format(dateTimeFormatter)
         );

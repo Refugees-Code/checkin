@@ -1,4 +1,4 @@
-package at.refugeescode.checkin;
+package at.refugeescode.checkin.domain;
 
 import lombok.*;
 import org.hibernate.validator.constraints.Email;

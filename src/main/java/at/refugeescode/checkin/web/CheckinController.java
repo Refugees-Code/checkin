@@ -1,5 +1,12 @@
-package at.refugeescode.checkin;
+package at.refugeescode.checkin.web;
 
+import at.refugeescode.checkin.config.SlackAppender;
+import at.refugeescode.checkin.domain.Checkin;
+import at.refugeescode.checkin.domain.CheckinRepository;
+import at.refugeescode.checkin.domain.Person;
+import at.refugeescode.checkin.domain.PersonRepository;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,22 +22,16 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @RestController
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
 public class CheckinController {
 
     public static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.YYYY HH:mm");
 
-    private PersonRepository personRepository;
-
-    private CheckinRepository checkinRepository;
-
-    @Autowired
-    public CheckinController(
-            PersonRepository personRepository,
-            CheckinRepository checkinRepository) {
-        this.personRepository = personRepository;
-        this.checkinRepository = checkinRepository;
-    }
+    @NonNull
+    private final PersonRepository personRepository;
+    @NonNull
+    private final CheckinRepository checkinRepository;
 
     private boolean isCheckedIn(Person person) {
         Optional<Checkin> lastCheckinOptional = checkinRepository.findLastByPersonOrderByTime(person);

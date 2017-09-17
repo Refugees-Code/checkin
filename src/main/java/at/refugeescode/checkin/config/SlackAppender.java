@@ -1,4 +1,4 @@
-package at.refugeescode.checkin;
+package at.refugeescode.checkin.config;
 
 import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;

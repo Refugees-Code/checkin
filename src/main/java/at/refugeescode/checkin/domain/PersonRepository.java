@@ -1,4 +1,4 @@
-package at.refugeescode.checkin;
+package at.refugeescode.checkin.domain;
 
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;

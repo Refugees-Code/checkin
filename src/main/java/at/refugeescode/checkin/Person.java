@@ -1,6 +1,7 @@
 package at.refugeescode.checkin;
 
 import lombok.*;
+import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
 import javax.persistence.Column;
@@ -23,17 +24,18 @@ public class Person {
     @NonNull
     @NotBlank
     @Column(nullable = false, unique = true)
+    private String uid;
+
+    @NotBlank
+    @Column(unique = true)
     private String name;
 
-    @Column
+    @Email
+    @Column(unique = true)
     private String email;
 
+    @NotBlank
     @Column
     private String slackHandle;
-
-    @NonNull
-    @NotBlank
-    @Column(nullable = false, unique = true)
-    private String uid;
 
 }

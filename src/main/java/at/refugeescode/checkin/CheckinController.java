@@ -9,9 +9,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.Optional;
 
 @RestController
 @Slf4j
@@ -32,8 +33,8 @@ public class CheckinController {
     }
 
     private boolean isCheckedIn(Person person) {
-        List<Checkin> checkins = checkinRepository.findByPersonOrderByTime(person);
-        return !checkins.isEmpty() && checkins.get(checkins.size() - 1).isCheckedIn();
+        Optional<Checkin> lastCheckinOptional = checkinRepository.findLastByPersonOrderByTime(person);
+        return lastCheckinOptional.isPresent() && lastCheckinOptional.get().isCheckedIn();
     }
 
     @GetMapping("/people/{uid}/checkin")
@@ -42,17 +43,28 @@ public class CheckinController {
 
         Person person = personRepository.findByUid(uid);
 
-        if (person == null)
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        if (person == null) {
+            person = personRepository.save(new Person(uid));
+        }
 
+        Optional<Checkin> lastCheckinOptional = checkinRepository.findLastByPersonOrderByTime(person);
         LocalDateTime now = LocalDateTime.now();
-        boolean checkedIn = !isCheckedIn(person);
+        Checkin checkin;
 
-        Checkin checkin = checkinRepository.save(new Checkin(person, now, checkedIn));
+        if (lastCheckinOptional.isPresent()) {
+            Checkin lastCheckin = lastCheckinOptional.get();
+            Duration duration = Duration.between(lastCheckin.getTime(), now);
+            checkin = new Checkin(person, now, duration, !lastCheckin.isCheckedIn());
+        }
+        else {
+            checkin = new Checkin(person, now, Duration.ZERO, true);
+        }
 
-        log.info(SlackAppender.POST_TO_SLACK, "User '{}' has checked {} at {}",
-                person.getName(),
-                checkedIn ? "in" : "out",
+        checkin = checkinRepository.save(checkin);
+
+        log.info(SlackAppender.POST_TO_SLACK, "{} has checked {} at {}",
+                person.getName() == null ? "A new user" : "User ' " + person.getName() + "'",
+                checkin.isCheckedIn() ? "in" : "out",
                 now.format(dateTimeFormatter)
         );
 

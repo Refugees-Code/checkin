@@ -34,8 +34,17 @@
     </appender>
 
     <root>
-        <appender-ref ref="smtp" />
-        <!--<appender-ref ref="slack" />-->
+        <if condition='property("checkin.mail.enabled").equals("true")'>
+            <then>
+                <appender-ref ref="smtp"/>
+            </then>
+        </if>
+
+        <if condition='property("checkin.slack.enabled").equals("true")'>
+            <then>
+                <appender-ref ref="slack" />
+            </then>
+        </if>
     </root>
 
 </configuration>

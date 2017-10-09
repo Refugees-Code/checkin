@@ -7,6 +7,7 @@ import at.refugeescode.checkin.domain.PersonRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.internal.constraintvalidators.hv.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -33,6 +34,8 @@ public class WeeklySummaryService {
     private String from;
     @Value("${checkin.mail.to}")
     private String to;
+
+    private static final EmailValidator emailValidator = new EmailValidator();
 
     @Scheduled(cron = "0 0 8 * * SUN") //every sunday at 08:00
     public void sendWeekyMail() {
@@ -67,7 +70,7 @@ public class WeeklySummaryService {
             overallSummaryMessageBuilder.append(summaryMessage).append("\n");
 
             //send mail to user with summary of hours during the last week
-            if (person.getEmail() != null) {
+            if (person.getEmail() != null && emailValidator.isValid(person.getEmail(), null)) {
                 mailService.sendMail(from, person.getEmail(), null, null,
                         "Your RefugeesCode Check-in Weekly Summary",
                         personalMessage);

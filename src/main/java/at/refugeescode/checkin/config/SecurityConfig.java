@@ -1,11 +1,9 @@
 package at.refugeescode.checkin.config;
 
 import com.google.common.collect.ImmutableList;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -29,20 +27,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .cors()
                 .and()
-                .httpBasic()
-                .and()
-                .authorizeRequests()
-                .anyRequest().hasRole(CLIENT_ROLE)
-                .and()
+//                .httpBasic()
+//                .and()
+//                .authorizeRequests()
+//                .anyRequest().hasRole(CLIENT_ROLE)
+//                .and()
                 .csrf().disable();
     }
 
-    @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                .inMemoryAuthentication()
-                .withUser(username).password(password).roles(CLIENT_ROLE);
-    }
+//    @Autowired
+//    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+//        auth
+//                .inMemoryAuthentication()
+//                .withUser(username).password(password).roles(CLIENT_ROLE);
+//    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

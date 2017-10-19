@@ -34,8 +34,22 @@ public class MailService {
 
     @Value("${checkin.mail.enabled}")
     private boolean enabled;
+    @Value("${checkin.mail.from}")
+    private String from;
+    @Value("${checkin.mail.to}")
+    private String to;
 
     private final Queue<MimeMessage> messageQueue = new ConcurrentLinkedQueue<>();
+
+    @Async
+    public void sendMail(String subject, String text) {
+        sendMail(this.from, this.to, null, null, subject, text);
+    }
+
+    @Async
+    public void sendMail(String to, String replyTo, String bcc, String subject, String text) {
+        sendMail(this.from, to, replyTo, bcc, subject, text);
+    }
 
     @Async
     public void sendMail(String from, String to, String replyTo, String bcc, String subject, String text) {

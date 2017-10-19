@@ -5,6 +5,7 @@ import at.refugeescode.checkin.domain.Checkin;
 import at.refugeescode.checkin.domain.CheckinRepository;
 import at.refugeescode.checkin.domain.Person;
 import at.refugeescode.checkin.domain.PersonRepository;
+import at.refugeescode.checkin.service.MailService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -33,6 +35,8 @@ public class CheckinController {
     private final PersonRepository personRepository;
     @NonNull
     private final CheckinRepository checkinRepository;
+    @NonNull
+    private final MailService mailService;
 
     private Optional<Checkin> lastCheckin(Person person) {
         List<Checkin> checkins = checkinRepository.findByPersonOrderByTime(person);
@@ -42,6 +46,17 @@ public class CheckinController {
     private boolean isCheckedIn(Person person) {
         Optional<Checkin> lastCheckinOptional = lastCheckin(person);
         return lastCheckinOptional.isPresent() && lastCheckinOptional.get().isCheckedIn();
+    }
+
+    @PostConstruct
+    public void init() {
+        mailService.sendMail("RefugeesCode Check-in Backend Startup", "Backend says, Hello!");
+    }
+
+    @GetMapping("/hello")
+    public ResponseEntity<Void> hello() {
+        mailService.sendMail("RefugeesCode Check-in Pi Startup", "RaspberryPi says, Hello!");
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/people/{uid}/checkin")
@@ -71,7 +86,7 @@ public class CheckinController {
         checkin = checkinRepository.save(checkin);
 
         log.info(SlackAppender.POST_TO_SLACK, "{} has checked {} at {}",
-                person.getName() == null ? "A new user" : "User '" + person.getName() + "'",
+                "User '" + person.getName() + "'",
                 checkin.isCheckedIn() ? "in" : "out",
                 now.format(dateTimeFormatter)
         );
@@ -90,4 +105,5 @@ public class CheckinController {
 
         return new ResponseEntity<>(isCheckedIn(person), HttpStatus.OK);
     }
+
 }

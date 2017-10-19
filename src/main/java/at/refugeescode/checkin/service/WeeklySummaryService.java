@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.internal.constraintvalidators.hv.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -29,11 +28,6 @@ public class WeeklySummaryService {
     private final CheckinRepository checkinRepository;
     @NonNull
     private final MailService mailService;
-
-    @Value("${checkin.mail.from}")
-    private String from;
-    @Value("${checkin.mail.to}")
-    private String to;
 
     private static final EmailValidator emailValidator = new EmailValidator();
 
@@ -71,7 +65,7 @@ public class WeeklySummaryService {
 
             //send mail to user with summary of hours during the last week
             if (person.getEmail() != null && emailValidator.isValid(person.getEmail(), null)) {
-                mailService.sendMail(from, person.getEmail(), null, null,
+                mailService.sendMail(person.getEmail(), null, null,
                         "Your RefugeesCode Check-in Weekly Summary",
                         personalMessage);
             }
@@ -87,7 +81,7 @@ public class WeeklySummaryService {
         log.info("{}", overallSummaryMessage);
 
         //send mail to admin with summary of hours during the last week for all users
-        mailService.sendMail(from, to, null, null, "RefugeesCode Check-in Summary", overallSummaryMessage);
+        mailService.sendMail("RefugeesCode Check-in Summary", overallSummaryMessage);
 
     }
 

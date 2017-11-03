@@ -42,7 +42,7 @@ public class MailService {
     private final Queue<MimeMessage> messageQueue = new ConcurrentLinkedQueue<>();
 
     @Async
-    public void sendMail(String subject, String text) {
+    public void sendMailToAdmin(String subject, String text) {
         sendMail(this.from, this.to, null, null, subject, text);
     }
 

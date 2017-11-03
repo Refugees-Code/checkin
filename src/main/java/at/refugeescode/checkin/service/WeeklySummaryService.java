@@ -38,7 +38,7 @@ public class WeeklySummaryService {
         LocalDateTime startOfLastWeek = startOfToday.minusDays(7);
 
         StringBuilder overallSummaryMessageBuilder = new StringBuilder();
-        overallSummaryMessageBuilder.append("Hello Trainer, this is our Weekly Summary:").append("\n\n");
+        overallSummaryMessageBuilder.append("Hello Trainer, this is our Weekly Summary:\n\n");
 
         for (Person person : personRepository.findAll()) {
 
@@ -49,7 +49,10 @@ public class WeeklySummaryService {
                     total = total.plus(checkin.getDuration());
             }
 
-            String personalMessage = String.format("Hello %s! Another week has passed and we're happy to share with you how much time you were present! %n%n You have been checked in for %s hours, in the week from %s until %s. %n Happy Coding and see you next week! %n%n Your refugees{code} Team.",
+            String personalMessage = String.format("Hello %s! " +
+                            "Another week has passed and we're happy to share with you how much time you were present! %n%n " +
+                            "You have been checked in for %s hours, in the week from %s until %s. %n Happy Coding and see you next week! %n%n " +
+                            "Your refugees{code} Team.",
                     person.getName(),
                     formatDuration(total),
                     startOfLastWeek.format(DateTimeFormatter.ISO_DATE_TIME),
@@ -81,7 +84,7 @@ public class WeeklySummaryService {
         log.info("{}", overallSummaryMessage);
 
         //send mail to admin with summary of hours during the last week for all users
-        mailService.sendMail("RefugeesCode Check-in Summary", overallSummaryMessage);
+        mailService.sendMailToAdmin("RefugeesCode Check-in Summary", overallSummaryMessage);
 
     }
 

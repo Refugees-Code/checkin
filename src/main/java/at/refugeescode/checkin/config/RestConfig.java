@@ -1,5 +1,8 @@
 package at.refugeescode.checkin.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
@@ -37,9 +40,13 @@ public class RestConfig extends RepositoryRestMvcConfiguration {
 
             @Override
             public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config) {
-                for (Class<?> entityClass : entityClasses) {
-                    config.exposeIdsFor(entityClass);
-                }
+                config.exposeIdsFor(entityClasses.toArray(new Class[entityClasses.size()]));
+            }
+
+            @Override
+            public void configureJacksonObjectMapper(ObjectMapper objectMapper) {
+                objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+                objectMapper.registerModules(new JavaTimeModule());
             }
         };
     }

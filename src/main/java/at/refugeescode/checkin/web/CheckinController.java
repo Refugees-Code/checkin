@@ -64,15 +64,15 @@ public class CheckinController {
             person = personRepository.save(new Person(uid, placeholder, placeholder));
         }
 
-        Optional<Checkin> lastCheckinOptional = checkinService.lastCheckin(person);
+        Optional<Checkin> lastCheckOptional = checkinService.lastCheck(person);
         LocalDateTime now = LocalDateTime.now();
         Checkin checkin;
 
-        if (!lastCheckinOptional.isPresent()) {
+        if (!lastCheckOptional.isPresent()) {
             checkin = new Checkin(person, now, Duration.ZERO, true);
         }
         else {
-            Checkin lastCheckin = lastCheckinOptional.get();
+            Checkin lastCheckin = lastCheckOptional.get();
             Duration duration = Duration.between(lastCheckin.getTime(), now);
             checkin = new Checkin(person, now, duration, !lastCheckin.isCheckedIn());
         }

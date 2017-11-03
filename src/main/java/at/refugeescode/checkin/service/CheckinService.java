@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,13 +21,16 @@ public class CheckinService {
     @NonNull
     private final CheckinRepository checkinRepository;
 
-    public Optional<Checkin> lastCheckin(Person person) {
+    public Optional<Checkin> lastCheck(Person person) {
         List<Checkin> checkins = checkinRepository.findByPersonOrderByTime(person);
         return checkins.isEmpty() ? Optional.empty() : Optional.of(checkins.get(checkins.size() - 1));
     }
 
     public boolean isCheckedIn(Person person) {
-        Optional<Checkin> lastCheckinOptional = lastCheckin(person);
-        return lastCheckinOptional.isPresent() && lastCheckinOptional.get().isCheckedIn();
+        return lastCheck(person).map(Checkin::isCheckedIn).orElse(false);
+    }
+
+    public Duration getLastDuration(Person person) {
+        return lastCheck(person).map(Checkin::getDuration).orElse(Duration.ZERO);
     }
 }

@@ -1,14 +1,13 @@
 package at.refugeescode.checkin.web;
 
 import at.refugeescode.checkin.config.SlackAppender;
-import at.refugeescode.checkin.domain.Checkin;
-import at.refugeescode.checkin.domain.CheckinRepository;
-import at.refugeescode.checkin.domain.Person;
-import at.refugeescode.checkin.domain.PersonRepository;
+import at.refugeescode.checkin.domain.*;
+import at.refugeescode.checkin.service.CheckinService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,6 +22,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -35,16 +35,10 @@ public class CheckinController {
     private final PersonRepository personRepository;
     @NonNull
     private final CheckinRepository checkinRepository;
-
-    private Optional<Checkin> lastCheckin(Person person) {
-        List<Checkin> checkins = checkinRepository.findByPersonOrderByTime(person);
-        return checkins.isEmpty() ? Optional.empty() : Optional.of(checkins.get(checkins.size() - 1));
-    }
-
-    private boolean isCheckedIn(Person person) {
-        Optional<Checkin> lastCheckinOptional = lastCheckin(person);
-        return lastCheckinOptional.isPresent() && lastCheckinOptional.get().isCheckedIn();
-    }
+    @NonNull
+    private final CheckinService checkinService;
+    @NonNull
+    private final ProjectionFactory projectionFactory;
 
     @GetMapping("/hello")
     public ResponseEntity<Void> hello() {
@@ -70,7 +64,7 @@ public class CheckinController {
             person = personRepository.save(new Person(uid, placeholder, placeholder));
         }
 
-        Optional<Checkin> lastCheckinOptional = lastCheckin(person);
+        Optional<Checkin> lastCheckinOptional = checkinService.lastCheckin(person);
         LocalDateTime now = LocalDateTime.now();
         Checkin checkin;
 
@@ -103,7 +97,19 @@ public class CheckinController {
         if (person == null)
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
-        return new ResponseEntity<>(isCheckedIn(person), HttpStatus.OK);
+        return new ResponseEntity<>(checkinService.isCheckedIn(person), HttpStatus.OK);
+    }
+
+    @GetMapping("/public/summary")
+    @Transactional
+    public ResponseEntity<List<PersonStatusProjection>> summary() {
+        return new ResponseEntity<>(createProjectionList(PersonStatusProjection.class, personRepository.findAll()), HttpStatus.OK);
+    }
+
+    private <T> List<T> createProjectionList(Class<T> projectionType, List<?> sourceList) {
+        return sourceList.stream()
+                .map(source -> projectionFactory.createProjection(projectionType, source))
+                .collect(Collectors.toList());
     }
 
 }

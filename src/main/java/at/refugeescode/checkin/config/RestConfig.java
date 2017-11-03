@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurerAdapter;
@@ -19,6 +21,11 @@ import java.util.List;
 
 @Configuration
 public class RestConfig extends RepositoryRestMvcConfiguration {
+
+    @Bean
+    public ProjectionFactory projectionFactory() {
+        return new SpelAwareProxyProjectionFactory();
+    }
 
     private List<Class<?>> getAllManagedEntityTypes(EntityManagerFactory entityManagerFactory) {
         List<Class<?>> entityClasses = new ArrayList<>();

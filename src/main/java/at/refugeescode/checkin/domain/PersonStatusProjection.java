@@ -13,7 +13,7 @@ public interface PersonStatusProjection {
     @Value("#{@checkinService.isCheckedIn(target)}")
     boolean isCheckedIn();
 
-    @Value("#{@checkinService.getLastDuration(target)}")
+    @Value("#{@checkinService.getLastCheckInTime(target)}")
     Duration getLastDuration();
 
 }

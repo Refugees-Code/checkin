@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +31,9 @@ public class CheckinService {
         return lastCheck(person).map(Checkin::isCheckedIn).orElse(false);
     }
 
-    public Duration getLastDuration(Person person) {
-        return lastCheck(person).map(Checkin::getDuration).orElse(Duration.ZERO);
+    public Duration getLastCheckInTime(Person person) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime lastTime = lastCheck(person).map(Checkin::getTime).orElse(now);
+        return Duration.between(lastTime, now);
     }
 }

@@ -33,7 +33,7 @@ public class CheckinService {
 
     public Duration getLastCheckInTime(Person person) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime lastTime = lastCheck(person).map(Checkin::getTime).orElse(now);
-        return Duration.between(lastTime, now);
+        Optional<LocalDateTime> lastTime = lastCheck(person).map(Checkin::getTime);
+        return lastTime.isPresent() ? Duration.between(lastTime.get(), now) : null;
     }
 }

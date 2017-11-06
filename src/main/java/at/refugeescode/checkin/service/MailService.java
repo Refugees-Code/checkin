@@ -83,7 +83,7 @@ public class MailService {
         }
     }
 
-    @Scheduled(fixedDelay = 10*1000)
+    @Scheduled(fixedDelayString = "${checkin.mail.queueDelay}")
     protected void processQueue() {
         if (!messageQueue.isEmpty()) {
             MimeMessage message = messageQueue.poll();

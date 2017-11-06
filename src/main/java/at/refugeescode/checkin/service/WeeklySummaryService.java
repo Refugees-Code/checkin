@@ -27,8 +27,8 @@ import java.util.List;
 public class WeeklySummaryService {
 
     private static final String PERSONAL_MESSAGE = "Hello %s!<br/><br/>" +
-            "Another week has passed and we're happy to share with you how much time you were present!<br/>" +
-            "You have been checked in for %s hours, in the week from %s until %s.<br/>" +
+            "Another week has passed and we're happy to share with you how much time you were present!<br/></br/>" +
+            "During last week, from %s until %s, you have been checked in for %s.<br/></br/>" +
             "Happy coding and see you next week!<br/><br/>" +
             "Your refugees{code}-Team";
     private static final String SUMMARY_MESSAGE = "Hello Trainer!<br/><br/>" +
@@ -38,6 +38,7 @@ public class WeeklySummaryService {
             "</table>" +
             "<br/><br/>" +
             "Happy coding!";
+    private static final String SUMMARY_ROW = "<tr><td>%s</td><td>%s</td></tr>";
 
     @NonNull
     private final PersonRepository personRepository;
@@ -55,8 +56,13 @@ public class WeeklySummaryService {
 
     private static final EmailValidator emailValidator = new EmailValidator();
 
+//    @PostConstruct
+//    public void init() {
+//        sendWeeklyMail();
+//    }
+
     @Scheduled(cron = "${checkin.mail.weekly}")
-    public void sendWeekyMail() {
+    public void sendWeeklyMail() {
         log.info("Sending weekly mails");
 
         LocalDate previousOrSameSunday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
@@ -64,36 +70,36 @@ public class WeeklySummaryService {
         LocalDateTime startOfLastWeek = previousOrSameSunday.minusDays(7).atStartOfDay();
 
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEEE, dd.MM.yyyy");
-        String formattedStartOfToday = dateFormatter.format(previousOrSameSunday);
-        String formattedStartOfLastWeek = dateFormatter.format(previousOrSameSunday.minusDays(6));
+        String formattedStartOfToday = dateFormatter.format(previousOrSameSunday.minusDays(1));
+        String formattedStartOfLastWeek = dateFormatter.format(previousOrSameSunday.minusDays(7));
 
         StringBuilder rowMessageBuilder = new StringBuilder();
 
         for (Person person : personRepository.findAll()) {
 
             Duration total = Duration.ZERO;
-            List<Checkin> checkins = checkinRepository.findByPersonAndCheckedInTrueOrderByTime(person);
+            List<Checkin> checkins = checkinRepository.findByPersonAndCheckedInFalseOrderByTime(person);
             for (Checkin checkin : checkins) {
                 if (checkin.getTime().isAfter(startOfLastWeek) && !checkin.getTime().isAfter(startOfToday))
                     total = total.plus(checkin.getDuration());
             }
 
-            rowMessageBuilder.append(String.format("<tr><td>%s</td><td>%s</td></tr>",
+            rowMessageBuilder.append(String.format(SUMMARY_ROW,
                     person.getName(),
-                    formatDuration(total)
+                    formatDuration(total, "%d:%02d")
             ));
 
             String personalMessage = String.format(PERSONAL_MESSAGE,
                     person.getName(),
-                    formatDuration(total),
                     formattedStartOfLastWeek,
-                    formattedStartOfToday
+                    formattedStartOfToday,
+                    formatDuration(total, "%d hours and %d minutes")
             );
 
             //send mail to user with summary of hours during the last week
             if (person.getEmail() != null && emailValidator.isValid(person.getEmail(), null)) {
                 mailService.sendMail(person.getEmail(), null, webmaster,
-                        "Your RefugeesCode Check-in Weekly Summary",
+                        "Your RefugeesCode Weekly Attendance Summary",
                         personalMessage);
             }
         }
@@ -104,7 +110,7 @@ public class WeeklySummaryService {
                 rowMessageBuilder.toString());
 
         //send mail to admin with summary of hours during the last week for all users
-        mailService.sendMail(trainer, null, null, "RefugeesCode Check-in Summary", overallSummaryMessage);
+        mailService.sendMail(trainer, null, null, "RefugeesCode Attendance Summary", overallSummaryMessage);
     }
 
     private static long ceilMinutes(Duration duration) {
@@ -114,10 +120,10 @@ public class WeeklySummaryService {
             return duration.toMinutes();
     }
 
-    private static String formatDuration(Duration duration) {
+    private static String formatDuration(Duration duration, String format) {
         duration = Duration.ofMinutes(ceilMinutes(duration));
         long hoursPart = duration.toHours();
         long minutesPart = duration.minusHours(hoursPart).toMinutes();
-        return String.format("%d:%02d", hoursPart, minutesPart);
+        return String.format(format, hoursPart, minutesPart);
     }
 }

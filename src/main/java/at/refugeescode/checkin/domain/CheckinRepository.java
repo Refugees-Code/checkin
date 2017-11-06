@@ -10,5 +10,5 @@ public interface CheckinRepository extends JpaRepository<Checkin, Long> {
 
     List<Checkin> findByPersonOrderByTime(Person person);
 
-    List<Checkin> findByPersonAndCheckedInTrueOrderByTime(Person person);
+    List<Checkin> findByPersonAndCheckedInFalseOrderByTime(Person person);
 }

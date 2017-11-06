@@ -18,6 +18,8 @@
         </cyclicBufferTracker>
         <evaluator class="ch.qos.logback.classic.boolex.JaninoEventEvaluator">
             <expression>
+                if (logger.contains("org.hibernate.orm.deprecation"))
+                    return false;
                 if (level >= WARN)
                     return true;
                 else if (marker != null &amp;&amp; marker.contains("SEND_MAIL"))

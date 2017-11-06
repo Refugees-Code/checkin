@@ -36,15 +36,12 @@ public class MailService {
     private boolean enabled;
     @Value("${checkin.mail.from}")
     private String from;
-    @Value("${checkin.mail.to}")
-    private String to;
+    @Value("${checkin.mail.debug}")
+    private boolean debug;
+    @Value("${checkin.mail.webmaster}")
+    private String webmaster;
 
     private final Queue<MimeMessage> messageQueue = new ConcurrentLinkedQueue<>();
-
-    @Async
-    public void sendMailToAdmin(String subject, String text) {
-        sendMail(this.from, this.to, null, null, subject, text);
-    }
 
     @Async
     public void sendMail(String to, String replyTo, String bcc, String subject, String text) {
@@ -53,6 +50,13 @@ public class MailService {
 
     @Async
     public void sendMail(String from, String to, String replyTo, String bcc, String subject, String text) {
+        if (debug) {
+            to = webmaster;
+        }
+        if (Strings.isNullOrEmpty(to)) {
+            log.warn("to is null or empty");
+            to = webmaster;
+        }
         if (enabled) {
             try {
                 log.info("Queue sending mail to: '{}', subject: '{}' ", to, subject);

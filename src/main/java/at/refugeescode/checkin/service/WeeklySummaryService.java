@@ -9,10 +9,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.internal.constraintvalidators.hv.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -29,13 +31,21 @@ public class WeeklySummaryService {
     @NonNull
     private final MailService mailService;
 
+    @Value("${checkin.mail.trainer}")
+    private String trainer;
+    @Value("${checkin.mail.webmaster}")
+    private String webmaster;
+
     private static final EmailValidator emailValidator = new EmailValidator();
 
-    @Scheduled(cron = "0 0 8 * * SUN") //every sunday at 08:00
+    //@Scheduled(cron = "0 0 8 * * SUN") //every sunday at 08:00
+    @Scheduled(cron = "0 10 13 * * MON")
     public void sendWeekyMail() {
+        log.info("Sending weekly mails");
 
-        LocalDateTime startOfToday = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime startOfLastWeek = startOfToday.minusDays(7);
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfToday = today.atStartOfDay();
+        LocalDateTime startOfLastWeek = today.minusDays(7).atStartOfDay();
 
         StringBuilder overallSummaryMessageBuilder = new StringBuilder();
         overallSummaryMessageBuilder.append("Hello Trainer, this is our Weekly Summary:\n\n");
@@ -68,7 +78,7 @@ public class WeeklySummaryService {
 
             //send mail to user with summary of hours during the last week
             if (person.getEmail() != null && emailValidator.isValid(person.getEmail(), null)) {
-                mailService.sendMail(person.getEmail(), null, null,
+                mailService.sendMail(person.getEmail(), null, webmaster,
                         "Your RefugeesCode Check-in Weekly Summary",
                         personalMessage);
             }
@@ -84,7 +94,7 @@ public class WeeklySummaryService {
         log.info("{}", overallSummaryMessage);
 
         //send mail to admin with summary of hours during the last week for all users
-        mailService.sendMailToAdmin("RefugeesCode Check-in Summary", overallSummaryMessage);
+        mailService.sendMail(trainer, null, null, "RefugeesCode Check-in Summary", overallSummaryMessage);
 
     }
 

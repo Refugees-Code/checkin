@@ -17,11 +17,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -29,12 +26,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CheckinController {
 
-    public static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.YYYY HH:mm");
-
     @NonNull
     private final PersonRepository personRepository;
-    @NonNull
-    private final CheckinRepository checkinRepository;
     @NonNull
     private final CheckinService checkinService;
     @NonNull
@@ -57,32 +50,12 @@ public class CheckinController {
     @Transactional
     public ResponseEntity<Boolean> checkin(@PathVariable("uid") String uid) {
 
-        Person person = personRepository.findByUid(uid);
-
-        if (person == null) {
-            String placeholder = "new-user-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
-            person = personRepository.save(new Person(uid, placeholder, placeholder));
-        }
-
-        Optional<Checkin> lastCheckOptional = checkinService.lastCheck(person);
-        LocalDateTime now = LocalDateTime.now();
-        Checkin checkin;
-
-        if (!lastCheckOptional.isPresent()) {
-            checkin = new Checkin(person, now, Duration.ZERO, true);
-        }
-        else {
-            Checkin lastCheckin = lastCheckOptional.get();
-            Duration duration = Duration.between(lastCheckin.getTime(), now);
-            checkin = new Checkin(person, now, duration, !lastCheckin.isCheckedIn());
-        }
-
-        checkin = checkinRepository.save(checkin);
+        Checkin checkin = checkinService.newCheckin(uid);
 
         log.info(SlackAppender.POST_TO_SLACK, "{} has checked {} at {}",
-                "User '" + person.getName() + "'",
+                "User '" + checkin.getPerson().getName() + "'",
                 checkin.isCheckedIn() ? "in" : "out",
-                now.format(dateTimeFormatter)
+                DateTimeFormatter.ofPattern("dd.MM.YYYY HH:mm").format(checkin.getTime())
         );
 
         return new ResponseEntity<>(checkin.isCheckedIn(), HttpStatus.OK);
@@ -103,7 +76,8 @@ public class CheckinController {
     @GetMapping("/public/summary")
     @Transactional
     public ResponseEntity<List<PersonStatusProjection>> summary() {
-        return new ResponseEntity<>(createProjectionList(PersonStatusProjection.class, personRepository.findAll()), HttpStatus.OK);
+        List<PersonStatusProjection> personStatusList = createProjectionList(PersonStatusProjection.class, personRepository.findAll());
+        return new ResponseEntity<>(personStatusList, HttpStatus.OK);
     }
 
     private <T> List<T> createProjectionList(Class<T> projectionType, List<?> sourceList) {

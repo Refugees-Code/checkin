@@ -24,6 +24,19 @@ import java.util.List;
 @Slf4j
 public class WeeklySummaryService {
 
+    private static final String PERSONAL_MESSAGE = "Hello %s!<br/><br/>" +
+            "Another week has passed and we're happy to share with you how much time you were present!<br/>" +
+            "You have been checked in for %s hours, in the week from %s until %s.<br/>" +
+            "Happy coding and see you next week!<br/><br/>" +
+            "Your refugees{code}-Team";
+    private static final String SUMMARY_MESSAGE = "Hello Trainer!<br/><br/>" +
+            "Here's the summary for the week from %s until %s:" +
+            "<table>" +
+            "%s" +
+            "</table>" +
+            "<br/><br/>" +
+            "Happy coding!";
+
     @NonNull
     private final PersonRepository personRepository;
     @NonNull
@@ -48,12 +61,11 @@ public class WeeklySummaryService {
         LocalDateTime startOfToday = today.atStartOfDay();
         LocalDateTime startOfLastWeek = today.minusDays(7).atStartOfDay();
 
-        StringBuilder overallSummaryMessageBuilder = new StringBuilder();
-        overallSummaryMessageBuilder.append("Hello Trainer!<br/><br/>Here is our weekly summary:<br/>");
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEEE, dd.MM.yyyy");
+        String formattedStartOfToday = dateFormatter.format(today);
+        String formattedStartOfLastWeek = dateFormatter.format(today.minusDays(6));
 
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, dd.MM.yyyy HH:mm");
-        String formattedStartOfToday = dateTimeFormatter.format(startOfToday);
-        String formattedStartOfLastWeek = dateTimeFormatter.format(startOfLastWeek);
+        StringBuilder rowMessageBuilder = new StringBuilder();
 
         for (Person person : personRepository.findAll()) {
 
@@ -64,23 +76,17 @@ public class WeeklySummaryService {
                     total = total.plus(checkin.getDuration());
             }
 
-            String personalMessage = String.format("Hello %s!<br/><br/>" +
-                            "Another week has passed and we're happy to share with you how much time you were present!<br/>" +
-                            "You have been checked in for %s hours, in the week from %s until %s.<br/>" +
-                            "Happy Coding and see you next week!<br/><br/>" +
-                            "Your refugees{code}-Team",
+            rowMessageBuilder.append(String.format("<tr><td>%s</td><td>%s</td></tr>",
+                    person.getName(),
+                    formatDuration(total)
+            ));
+
+            String personalMessage = String.format(PERSONAL_MESSAGE,
                     person.getName(),
                     formatDuration(total),
                     formattedStartOfLastWeek,
                     formattedStartOfToday
             );
-
-            String summaryMessage = String.format("%s has been checked in for %s",
-                    person.getName(),
-                    formatDuration(total)
-            );
-
-            overallSummaryMessageBuilder.append(summaryMessage).append("<br/>");
 
             //send mail to user with summary of hours during the last week
             if (person.getEmail() != null && emailValidator.isValid(person.getEmail(), null)) {
@@ -90,18 +96,13 @@ public class WeeklySummaryService {
             }
         }
 
-        overallSummaryMessageBuilder.append(String.format("in the week from %s until %s.",
+        String overallSummaryMessage = String.format(SUMMARY_MESSAGE,
                 formattedStartOfLastWeek,
-                formattedStartOfToday
-        ));
-
-        String overallSummaryMessage = overallSummaryMessageBuilder.toString();
-
-        log.info("{}", overallSummaryMessage);
+                formattedStartOfToday,
+                rowMessageBuilder.toString());
 
         //send mail to admin with summary of hours during the last week for all users
         mailService.sendMail(trainer, null, null, "RefugeesCode Check-in Summary", overallSummaryMessage);
-
     }
 
     private static long ceilMinutes(Duration duration) {

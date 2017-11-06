@@ -51,6 +51,10 @@ public class WeeklySummaryService {
         StringBuilder overallSummaryMessageBuilder = new StringBuilder();
         overallSummaryMessageBuilder.append("Hello Trainer!<br/><br/>Here is our weekly summary:<br/>");
 
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, dd.MM.yyyy HH:mm");
+        String formattedStartOfToday = dateTimeFormatter.format(startOfToday);
+        String formattedStartOfLastWeek = dateTimeFormatter.format(startOfLastWeek);
+
         for (Person person : personRepository.findAll()) {
 
             Duration total = Duration.ZERO;
@@ -67,8 +71,8 @@ public class WeeklySummaryService {
                             "Your refugees{code}-Team",
                     person.getName(),
                     formatDuration(total),
-                    startOfLastWeek.format(DateTimeFormatter.ISO_DATE_TIME),
-                    startOfToday.format(DateTimeFormatter.ISO_DATE_TIME)
+                    formattedStartOfLastWeek,
+                    formattedStartOfToday
             );
 
             String summaryMessage = String.format("%s has been checked in for %s",
@@ -86,9 +90,9 @@ public class WeeklySummaryService {
             }
         }
 
-        overallSummaryMessageBuilder.append(String.format("since %s until %s.",
-                startOfLastWeek.format(DateTimeFormatter.ISO_DATE_TIME),
-                startOfToday.format(DateTimeFormatter.ISO_DATE_TIME)
+        overallSummaryMessageBuilder.append(String.format("in the week from %s until %s.",
+                formattedStartOfLastWeek,
+                formattedStartOfToday
         ));
 
         String overallSummaryMessage = overallSummaryMessageBuilder.toString();

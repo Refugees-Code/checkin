@@ -8,11 +8,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters;
 import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 
 @EntityScan(basePackageClasses = {Application.class, Jsr310JpaConverters.class})
 @SpringBootApplication
+@EnableAsync
 @EnableScheduling
 @EnableAspectJAutoProxy
 @Slf4j

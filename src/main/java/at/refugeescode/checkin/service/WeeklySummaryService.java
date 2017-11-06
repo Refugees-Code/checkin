@@ -35,11 +35,12 @@ public class WeeklySummaryService {
     private String trainer;
     @Value("${checkin.mail.webmaster}")
     private String webmaster;
+    @Value("${checkin.mail.weekly}")
+    private String weekly;
 
     private static final EmailValidator emailValidator = new EmailValidator();
 
-    //@Scheduled(cron = "0 0 8 * * SUN") //every sunday at 08:00
-    @Scheduled(cron = "0 10 13 * * MON")
+    @Scheduled(cron = "${checkin.mail.weekly}")
     public void sendWeekyMail() {
         log.info("Sending weekly mails");
 

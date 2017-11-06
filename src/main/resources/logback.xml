@@ -10,13 +10,22 @@
         <username>${spring.mail.username}</username>
         <password>${spring.mail.password}</password>
         <from>${checkin.mail.from}</from>
-        <to>${checkin.mail.to}</to>
+        <to>${checkin.mail.webmaster}</to>
         <layout class="ch.qos.logback.classic.html.HTMLLayout" />
         <cyclicBufferTracker class="ch.qos.logback.core.spi.CyclicBufferTracker">
             <bufferSize>1</bufferSize>
         </cyclicBufferTracker>
-        <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
-            <marker>SEND_MAIL</marker>
+        <evaluator class="ch.qos.logback.classic.boolex.JaninoEventEvaluator">
+            <expression>
+                if (level >= WARN)
+                    return true;
+                else if (marker != null &amp;&amp; marker.contains("SEND_MAIL"))
+                    return true;
+                else if (marker != null &amp;&amp; marker.contains("SEND_MAIL_AND_POST_TO_SLACK"))
+                    return true;
+                else
+                    return false;
+            </expression>
         </evaluator>
     </appender>
 

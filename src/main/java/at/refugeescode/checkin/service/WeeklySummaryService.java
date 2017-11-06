@@ -13,10 +13,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 @Service
@@ -57,13 +59,13 @@ public class WeeklySummaryService {
     public void sendWeekyMail() {
         log.info("Sending weekly mails");
 
-        LocalDate today = LocalDate.now();
-        LocalDateTime startOfToday = today.atStartOfDay();
-        LocalDateTime startOfLastWeek = today.minusDays(7).atStartOfDay();
+        LocalDate previousOrSameSunday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
+        LocalDateTime startOfToday = previousOrSameSunday.atStartOfDay();
+        LocalDateTime startOfLastWeek = previousOrSameSunday.minusDays(7).atStartOfDay();
 
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEEE, dd.MM.yyyy");
-        String formattedStartOfToday = dateFormatter.format(today);
-        String formattedStartOfLastWeek = dateFormatter.format(today.minusDays(6));
+        String formattedStartOfToday = dateFormatter.format(previousOrSameSunday);
+        String formattedStartOfLastWeek = dateFormatter.format(previousOrSameSunday.minusDays(6));
 
         StringBuilder rowMessageBuilder = new StringBuilder();
 

@@ -10,7 +10,7 @@ import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 @EntityScan(basePackageClasses = {Application.class, Jsr310JpaConverters.class})
 @SpringBootApplication
@@ -22,7 +22,9 @@ public class Application {
 
     @Bean
     public TaskScheduler taskScheduler() {
-        return new ConcurrentTaskScheduler();
+        ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
+        threadPoolTaskScheduler.setPoolSize(10);
+        return threadPoolTaskScheduler;
     }
 
     public static void main(String[] args) {

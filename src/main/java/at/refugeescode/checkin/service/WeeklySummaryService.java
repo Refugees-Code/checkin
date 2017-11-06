@@ -49,7 +49,7 @@ public class WeeklySummaryService {
         LocalDateTime startOfLastWeek = today.minusDays(7).atStartOfDay();
 
         StringBuilder overallSummaryMessageBuilder = new StringBuilder();
-        overallSummaryMessageBuilder.append("Hello Trainer, this is our Weekly Summary:\n\n");
+        overallSummaryMessageBuilder.append("Hello Trainer!<br/><br/>Here is our weekly summary:<br/>");
 
         for (Person person : personRepository.findAll()) {
 
@@ -60,10 +60,11 @@ public class WeeklySummaryService {
                     total = total.plus(checkin.getDuration());
             }
 
-            String personalMessage = String.format("Hello %s! " +
-                            "Another week has passed and we're happy to share with you how much time you were present! %n%n " +
-                            "You have been checked in for %s hours, in the week from %s until %s. %n Happy Coding and see you next week! %n%n " +
-                            "Your refugees{code} Team.",
+            String personalMessage = String.format("Hello %s!<br/><br/>" +
+                            "Another week has passed and we're happy to share with you how much time you were present!<br/>" +
+                            "You have been checked in for %s hours, in the week from %s until %s.<br/>" +
+                            "Happy Coding and see you next week!<br/><br/>" +
+                            "Your refugees{code}-Team",
                     person.getName(),
                     formatDuration(total),
                     startOfLastWeek.format(DateTimeFormatter.ISO_DATE_TIME),
@@ -75,7 +76,7 @@ public class WeeklySummaryService {
                     formatDuration(total)
             );
 
-            overallSummaryMessageBuilder.append(summaryMessage).append("\n");
+            overallSummaryMessageBuilder.append(summaryMessage).append("<br/>");
 
             //send mail to user with summary of hours during the last week
             if (person.getEmail() != null && emailValidator.isValid(person.getEmail(), null)) {

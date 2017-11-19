@@ -10,6 +10,6 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
 
     Person findByUid(String uid);
 
-    List<Person> findAllOrderByName();
+    List<Person> findAllByOrderByName();
 
 }

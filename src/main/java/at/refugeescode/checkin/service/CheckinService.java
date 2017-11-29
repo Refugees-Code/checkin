@@ -8,9 +8,12 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -22,28 +25,40 @@ import java.util.Optional;
 @Slf4j
 public class CheckinService {
 
+    private static final String FORGOT_CHECK_OUT_MESSAGE = "Hello %s!<br/><br/>" +
+            "Did you forget to check out today?<br/></br/>" +
+            "You have been automatically checked out at midnight.<br/></br/>" +
+            "Your refugees{code}-Team";
+
     @NonNull
     private final CheckinRepository checkinRepository;
     @NonNull
     private final PersonRepository personRepository;
+    @NonNull
+    private final MailService mailService;
 
+    @Value("${checkin.mail.webmaster}")
+    private String webmaster;
+
+    @Transactional(readOnly = true)
     public Optional<Checkin> lastCheck(Person person) {
-        List<Checkin> checkins = checkinRepository.findByPersonOrderByTime(person);
-        return checkins.isEmpty() ? Optional.empty() : Optional.of(checkins.get(checkins.size() - 1));
+        return checkinRepository.findFirstByPersonOrderByTimeDesc(person);
     }
 
+    @Transactional(readOnly = true)
     public boolean isCheckedIn(Person person) {
         return lastCheck(person).map(Checkin::isCheckedIn).orElse(false);
     }
 
+    @Transactional(readOnly = true)
     public Duration getLastCheckInTime(Person person) {
         LocalDateTime now = LocalDateTime.now();
         Optional<LocalDateTime> lastTime = lastCheck(person).map(Checkin::getTime);
         return lastTime.isPresent() ? Duration.between(lastTime.get(), now) : null;
     }
 
-    @Transactional
-    public Checkin newCheckin(String uid) {
+    @Transactional(readOnly = false)
+    public Checkin newCheck(String uid) {
         Person person = personRepository.findByUid(uid);
 
         if (person == null) {
@@ -53,19 +68,39 @@ public class CheckinService {
 
         Optional<Checkin> lastCheckOptional = lastCheck(person);
         LocalDateTime now = LocalDateTime.now();
-        Checkin checkin;
+        Checkin check;
 
         if (!lastCheckOptional.isPresent()) {
-            checkin = new Checkin(person, now, Duration.ZERO, true);
+            check = new Checkin(person, now, Duration.ZERO, true);
         }
         else {
-            Checkin lastCheckin = lastCheckOptional.get();
-            Duration duration = Duration.between(lastCheckin.getTime(), now);
-            checkin = new Checkin(person, now, duration, !lastCheckin.isCheckedIn());
+            Checkin lastCheck = lastCheckOptional.get();
+            Duration duration = Duration.between(lastCheck.getTime(), now);
+            check = new Checkin(person, now, duration, !lastCheck.isCheckedIn());
         }
 
-        checkin = checkinRepository.save(checkin);
+        check = checkinRepository.save(check);
 
-        return checkin;
+        return check;
+    }
+
+    @PostConstruct
+    void init() {
+        autoCheckOut();
+    }
+
+    @Scheduled(cron = "${checkin.autoCheckOut}")
+    @Transactional(readOnly = false)
+    public void autoCheckOut() {
+        List<Person> people = personRepository.findAll();
+        for (Person person : people) {
+            if (isCheckedIn(person)) {
+                newCheck(person.getUid());
+
+                mailService.sendMail(person, null, webmaster,
+                        "RefugeesCode Attendance - Forgot to check out?",
+                        String.format(FORGOT_CHECK_OUT_MESSAGE, person.getName()));
+            }
+        }
     }
 }

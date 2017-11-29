@@ -1,9 +1,11 @@
 package at.refugeescode.checkin.service;
 
+import at.refugeescode.checkin.domain.Person;
 import com.google.common.base.Strings;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.internal.constraintvalidators.hv.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
@@ -29,6 +31,8 @@ public class MailService {
         return address == null || address.isEmpty() ? null : new InternetAddress(address);
     }
 
+    private static final EmailValidator emailValidator = new EmailValidator();
+
     @NonNull
     private final JavaMailSender mailSender;
 
@@ -42,6 +46,13 @@ public class MailService {
     private String webmaster;
 
     private final Queue<MimeMessage> messageQueue = new ConcurrentLinkedQueue<>();
+
+    @Async
+    public void sendMail(Person receiver, String replyTo, String bcc, String subject, String text) {
+        if (receiver.getEmail() != null && emailValidator.isValid(receiver.getEmail(), null)) {
+            sendMail(this.from, receiver.getEmail(), replyTo, bcc, subject, text);
+        }
+    }
 
     @Async
     public void sendMail(String to, String replyTo, String bcc, String subject, String text) {

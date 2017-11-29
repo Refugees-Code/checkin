@@ -50,7 +50,7 @@ public class CheckinController {
     @Transactional
     public ResponseEntity<Boolean> checkin(@PathVariable("uid") String uid) {
 
-        Checkin checkin = checkinService.newCheckin(uid);
+        Checkin checkin = checkinService.newCheck(uid);
 
         log.info(SlackAppender.POST_TO_SLACK, "{} has checked {} at {}",
                 "User '" + checkin.getPerson().getName() + "'",

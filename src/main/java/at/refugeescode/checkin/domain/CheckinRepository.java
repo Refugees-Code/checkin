@@ -6,11 +6,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 import java.util.List;
+import java.util.Optional;
 
 @RepositoryRestResource(collectionResourceRel = "checkins", path = "checkins")
 public interface CheckinRepository extends JpaRepository<Checkin, Long> {
 
     Page<Checkin> findByOrderByTimeDesc(Pageable pageable);
+
+    Optional<Checkin> findFirstByPersonOrderByTimeDesc(Person person);
 
     List<Checkin> findByPersonOrderByTime(Person person);
 

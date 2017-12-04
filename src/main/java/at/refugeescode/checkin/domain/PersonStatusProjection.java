@@ -8,7 +8,7 @@ import java.time.Duration;
 @Projection(name = "status", types = Person.class)
 public interface PersonStatusProjection {
 
-    String getName();
+    String getShortName();
 
     @Value("#{@checkinService.isCheckedIn(target)}")
     boolean isCheckedIn();

@@ -1,5 +1,6 @@
 package at.refugeescode.checkin.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -37,5 +38,15 @@ public class Person {
 
     @Column
     private String slackHandle;
+
+    @JsonIgnore
+    public String getShortName() {
+        String[] parts = name.split("\\s+");
+        StringBuilder shortName = new StringBuilder(parts[0]);
+        for (int i = 1; i < parts.length; i++)
+            if (!parts[i].isEmpty())
+                shortName.append(" ").append(parts[i].substring(0, 1)).append(".");
+        return shortName.toString();
+    }
 
 }

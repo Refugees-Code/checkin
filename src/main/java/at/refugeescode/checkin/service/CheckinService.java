@@ -1,9 +1,6 @@
 package at.refugeescode.checkin.service;
 
-import at.refugeescode.checkin.domain.Checkin;
-import at.refugeescode.checkin.domain.CheckinRepository;
-import at.refugeescode.checkin.domain.Person;
-import at.refugeescode.checkin.domain.PersonRepository;
+import at.refugeescode.checkin.domain.*;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,10 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -47,6 +45,30 @@ public class CheckinService {
     @Transactional(readOnly = true)
     public boolean isCheckedIn(Person person) {
         return lastCheck(person).map(Checkin::isCheckedIn).orElse(false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DailyDuration> dailyDurations(YearMonth yearMonth, Person person) {
+
+        List<DailyDuration> dailyDurations = new ArrayList<>(yearMonth.lengthOfMonth());
+        LocalDate startOfMonth = yearMonth.atDay(1);
+        LocalDate startOfNextMonth = yearMonth.plusMonths(1).atDay(1);
+
+        for (LocalDate day = startOfMonth; day.isBefore(startOfNextMonth); day = day.plusDays(1)) {
+
+            LocalDateTime startOfDay = day.atStartOfDay();
+            LocalDateTime startOfNextDay = day.plusDays(1).atStartOfDay();
+
+            List<Checkin> checkins = checkinRepository.findByPersonAndCheckedInFalseAndTimeBetweenOrderByTimeDesc(person, startOfDay, startOfNextDay);
+
+            Duration duration = Duration.ZERO;
+            for (Checkin checkin : checkins)
+                duration = duration.plus(checkin.getDuration());
+
+            dailyDurations.add(new DailyDuration(day, duration));
+        }
+
+        return dailyDurations;
     }
 
     @Transactional(readOnly = true)

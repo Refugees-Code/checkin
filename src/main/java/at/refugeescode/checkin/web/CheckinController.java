@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -73,9 +75,19 @@ public class CheckinController {
         return new ResponseEntity<>(checkinService.isCheckedIn(person), HttpStatus.OK);
     }
 
+    @GetMapping("/overview/{yearMonth}")
+    @Transactional
+    public ResponseEntity<List<PersonDailyDurations>> overview(@PathVariable("yearMonth") YearMonth yearMonth) {
+        List<Person> people = personRepository.findAll();
+        List<PersonDailyDurations> result = new ArrayList<>();
+        for (Person person : people)
+            result.add(new PersonDailyDurations(person.getName(), checkinService.dailyDurations(yearMonth, person)));
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
     @GetMapping("/public/summary")
     @Transactional
-    public ResponseEntity<List<PersonStatusProjection>> summary() {
+    public ResponseEntity<List<PersonStatusProjection>> publicSummary() {
         List<PersonStatusProjection> personStatusList = createProjectionList(PersonStatusProjection.class, personRepository.findAll());
         return new ResponseEntity<>(personStatusList, HttpStatus.OK);
     }

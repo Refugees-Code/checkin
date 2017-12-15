@@ -71,9 +71,9 @@ public class CheckinService {
     }
 
     @Transactional(readOnly = true)
-    public List<Duration> overviewDurations(YearMonth yearMonth, Person person) {
+    public List<String> overviewDurations(YearMonth yearMonth, Person person) {
 
-        List<Duration> durations = new ArrayList<>(yearMonth.lengthOfMonth());
+        List<String> durations = new ArrayList<>(yearMonth.lengthOfMonth());
 
         LocalDate startOfMonth = yearMonth.atDay(1);
         LocalDate startOfNextMonth = yearMonth.plusMonths(1).atDay(1);
@@ -91,18 +91,33 @@ public class CheckinService {
             for (Checkin checkin : checkins)
                 duration = duration.plus(checkin.getDuration());
 
-            durations.add(duration);
+            durations.add(formatDuration(duration));
 
             weekTotal = weekTotal.plus(duration);
 
             if (day.getDayOfWeek() == DayOfWeek.SUNDAY) {
-                durations.add(weekTotal);
+                durations.add(formatDuration(weekTotal));
                 weekTotal = Duration.ZERO;
             }
         }
 
         return durations;
     }
+
+    public static long ceilMinutes(Duration duration) {
+        if (duration.getSeconds() % 60 != 0 || duration.getNano() != 0)
+            return duration.toMinutes() + 1;
+        else
+            return duration.toMinutes();
+    }
+
+    public static String formatDuration(Duration duration) {
+        duration = Duration.ofMinutes(ceilMinutes(duration));
+        long hoursPart = duration.toHours();
+        long minutesPart = duration.minusHours(hoursPart).toMinutes();
+        return String.format("%d:%02d", hoursPart, minutesPart);
+    }
+
 
     @Transactional(readOnly = true)
     public Duration getLastCheckInTime(Person person) {

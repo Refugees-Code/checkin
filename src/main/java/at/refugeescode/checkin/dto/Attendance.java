@@ -3,7 +3,6 @@ package at.refugeescode.checkin.dto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.time.Duration;
 import java.util.List;
 
 @AllArgsConstructor
@@ -11,6 +10,6 @@ import java.util.List;
 public class Attendance {
 
     protected String name;
-    protected List<Duration> durations;
+    protected List<String> durations;
 
 }

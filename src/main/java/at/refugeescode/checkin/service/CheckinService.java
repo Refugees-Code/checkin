@@ -112,10 +112,7 @@ public class CheckinService {
     }
 
     public static String formatDuration(Duration duration) {
-        duration = Duration.ofMinutes(ceilMinutes(duration));
-        long hoursPart = duration.toHours();
-        long minutesPart = duration.minusHours(hoursPart).toMinutes();
-        return String.format("%d:%02d", hoursPart, minutesPart);
+        return duration.isZero() ? "" : String.format("%.1f", ceilMinutes(duration) / 60.0);
     }
 
 

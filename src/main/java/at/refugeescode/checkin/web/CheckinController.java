@@ -89,7 +89,7 @@ public class CheckinController {
 
         List<String> columns = checkinService.overviewColumns(yearMonth);
 
-        return new ResponseEntity<>(new Overview(columns, attendances), HttpStatus.OK);
+        return new ResponseEntity<>(new Overview(yearMonth, columns, attendances), HttpStatus.OK);
     }
 
     @GetMapping("/public/summary")

@@ -61,10 +61,10 @@ public class CheckinService {
 
         for (LocalDate day = startOfMonth; day.isBefore(startOfNextMonth); day = day.plusDays(1)) {
 
-            columns.add(day.format(DateTimeFormatter.ISO_DATE));
+            columns.add(String.valueOf(day.getDayOfMonth()));
 
             if (day.getDayOfWeek() == DayOfWeek.SUNDAY)
-                columns.add("week-" + (++week));
+                columns.add("w-" + (++week));
         }
 
         return columns;

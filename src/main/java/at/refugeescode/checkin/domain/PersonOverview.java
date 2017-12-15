@@ -7,9 +7,9 @@ import java.util.List;
 
 @AllArgsConstructor
 @Getter
-public class PersonDailyDurations {
+public class PersonOverview {
 
     protected String name;
-    protected List<DailyDuration> dailyDurations;
+    protected List<OverviewDuration> attendance;
 
 }

@@ -77,11 +77,11 @@ public class CheckinController {
 
     @GetMapping("/overview/{yearMonth}")
     @Transactional
-    public ResponseEntity<List<PersonDailyDurations>> overview(@PathVariable("yearMonth") YearMonth yearMonth) {
+    public ResponseEntity<List<PersonOverview>> overview(@PathVariable("yearMonth") YearMonth yearMonth) {
         List<Person> people = personRepository.findAll();
-        List<PersonDailyDurations> result = new ArrayList<>();
+        List<PersonOverview> result = new ArrayList<>();
         for (Person person : people)
-            result.add(new PersonDailyDurations(person.getName(), checkinService.dailyDurations(yearMonth, person)));
+            result.add(new PersonOverview(person.getName(), checkinService.dailyDurations(yearMonth, person)));
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 

@@ -4,12 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.time.Duration;
-import java.time.LocalDate;
 
 @AllArgsConstructor
 @Getter
-public class DailyDuration implements OverviewDuration {
+public class WeeklyDuration implements OverviewDuration {
 
-    protected LocalDate date;
+    protected int week;
     protected Duration duration;
 }

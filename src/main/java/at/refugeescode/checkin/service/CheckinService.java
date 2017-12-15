@@ -10,10 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.YearMonth;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -48,11 +45,15 @@ public class CheckinService {
     }
 
     @Transactional(readOnly = true)
-    public List<DailyDuration> dailyDurations(YearMonth yearMonth, Person person) {
+    public List<OverviewDuration> dailyDurations(YearMonth yearMonth, Person person) {
 
-        List<DailyDuration> dailyDurations = new ArrayList<>(yearMonth.lengthOfMonth());
+        List<OverviewDuration> results = new ArrayList<>(yearMonth.lengthOfMonth());
+
         LocalDate startOfMonth = yearMonth.atDay(1);
         LocalDate startOfNextMonth = yearMonth.plusMonths(1).atDay(1);
+
+        int week = 0;
+        Duration weekTotal = Duration.ZERO;
 
         for (LocalDate day = startOfMonth; day.isBefore(startOfNextMonth); day = day.plusDays(1)) {
 
@@ -65,10 +66,18 @@ public class CheckinService {
             for (Checkin checkin : checkins)
                 duration = duration.plus(checkin.getDuration());
 
-            dailyDurations.add(new DailyDuration(day, duration));
+            results.add(new DailyDuration(day, duration));
+
+            weekTotal = weekTotal.plus(duration);
+
+            if (day.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                results.add(new WeeklyDuration(week, weekTotal));
+                week++;
+                weekTotal = Duration.ZERO;
+            }
         }
 
-        return dailyDurations;
+        return results;
     }
 
     @Transactional(readOnly = true)

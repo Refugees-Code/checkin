@@ -1,6 +1,9 @@
 package at.refugeescode.checkin.service;
 
-import at.refugeescode.checkin.domain.*;
+import at.refugeescode.checkin.domain.Checkin;
+import at.refugeescode.checkin.domain.CheckinRepository;
+import at.refugeescode.checkin.domain.Person;
+import at.refugeescode.checkin.domain.PersonRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -45,14 +50,34 @@ public class CheckinService {
     }
 
     @Transactional(readOnly = true)
-    public List<OverviewDuration> dailyDurations(YearMonth yearMonth, Person person) {
+    public List<String> overviewColumns(YearMonth yearMonth) {
 
-        List<OverviewDuration> results = new ArrayList<>(yearMonth.lengthOfMonth());
+        List<String> columns = new ArrayList<>(yearMonth.lengthOfMonth());
 
         LocalDate startOfMonth = yearMonth.atDay(1);
         LocalDate startOfNextMonth = yearMonth.plusMonths(1).atDay(1);
 
         int week = 0;
+
+        for (LocalDate day = startOfMonth; day.isBefore(startOfNextMonth); day = day.plusDays(1)) {
+
+            columns.add(day.format(DateTimeFormatter.ISO_DATE));
+
+            if (day.getDayOfWeek() == DayOfWeek.SUNDAY)
+                columns.add("week-" + (++week));
+        }
+
+        return columns;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Duration> overviewDurations(YearMonth yearMonth, Person person) {
+
+        List<Duration> durations = new ArrayList<>(yearMonth.lengthOfMonth());
+
+        LocalDate startOfMonth = yearMonth.atDay(1);
+        LocalDate startOfNextMonth = yearMonth.plusMonths(1).atDay(1);
+
         Duration weekTotal = Duration.ZERO;
 
         for (LocalDate day = startOfMonth; day.isBefore(startOfNextMonth); day = day.plusDays(1)) {
@@ -66,18 +91,17 @@ public class CheckinService {
             for (Checkin checkin : checkins)
                 duration = duration.plus(checkin.getDuration());
 
-            results.add(new DailyDuration(day, duration));
+            durations.add(duration);
 
             weekTotal = weekTotal.plus(duration);
 
             if (day.getDayOfWeek() == DayOfWeek.SUNDAY) {
-                results.add(new WeeklyDuration(week, weekTotal));
-                week++;
+                durations.add(weekTotal);
                 weekTotal = Duration.ZERO;
             }
         }
 
-        return results;
+        return durations;
     }
 
     @Transactional(readOnly = true)

@@ -2,6 +2,8 @@ package at.refugeescode.checkin.web;
 
 import at.refugeescode.checkin.config.SlackAppender;
 import at.refugeescode.checkin.domain.*;
+import at.refugeescode.checkin.dto.Attendance;
+import at.refugeescode.checkin.dto.Overview;
 import at.refugeescode.checkin.service.CheckinService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -77,12 +79,17 @@ public class CheckinController {
 
     @GetMapping("/overview/{yearMonth}")
     @Transactional
-    public ResponseEntity<List<PersonOverview>> overview(@PathVariable("yearMonth") YearMonth yearMonth) {
+    public ResponseEntity<Overview> overview(@PathVariable("yearMonth") YearMonth yearMonth) {
+
         List<Person> people = personRepository.findAll();
-        List<PersonOverview> result = new ArrayList<>();
+
+        List<Attendance> attendances = new ArrayList<>();
         for (Person person : people)
-            result.add(new PersonOverview(person.getName(), checkinService.dailyDurations(yearMonth, person)));
-        return new ResponseEntity<>(result, HttpStatus.OK);
+            attendances.add(new Attendance(person.getName(), checkinService.overviewDurations(yearMonth, person)));
+
+        List<String> columns = checkinService.overviewColumns(yearMonth);
+
+        return new ResponseEntity<>(new Overview(columns, attendances), HttpStatus.OK);
     }
 
     @GetMapping("/public/summary")

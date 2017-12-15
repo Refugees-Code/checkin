@@ -1,15 +1,16 @@
-package at.refugeescode.checkin.domain;
+package at.refugeescode.checkin.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.time.Duration;
 import java.util.List;
 
 @AllArgsConstructor
 @Getter
-public class PersonOverview {
+public class Attendance {
 
     protected String name;
-    protected List<OverviewDuration> attendance;
+    protected List<Duration> durations;
 
 }

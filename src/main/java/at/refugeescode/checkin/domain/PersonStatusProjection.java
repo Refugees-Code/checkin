@@ -17,4 +17,7 @@ public interface PersonStatusProjection {
     @Value("#{@checkinService.getLastCheckInTime(target)}")
     Duration getLastDuration();
 
+    @Value("#{@checkinService.getLastWeekDuration(target)}")
+    Duration getWeekDuration();
+
 }

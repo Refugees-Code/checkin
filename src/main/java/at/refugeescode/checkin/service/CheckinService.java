@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -50,7 +51,7 @@ public class CheckinService {
     }
 
     @Transactional(readOnly = true)
-    public List<String> overviewColumns(YearMonth yearMonth) {
+    public List<String> getOverviewColumns(YearMonth yearMonth) {
 
         List<String> columns = new ArrayList<>(yearMonth.lengthOfMonth());
 
@@ -71,7 +72,7 @@ public class CheckinService {
     }
 
     @Transactional(readOnly = true)
-    public List<String> overviewDurations(YearMonth yearMonth, Person person) {
+    public List<String> getOverviewDurations(YearMonth yearMonth, Person person) {
 
         List<String> durations = new ArrayList<>(yearMonth.lengthOfMonth());
 
@@ -82,18 +83,11 @@ public class CheckinService {
 
         for (LocalDate day = startOfMonth; day.isBefore(startOfNextMonth); day = day.plusDays(1)) {
 
-            LocalDateTime startOfDay = day.atStartOfDay();
-            LocalDateTime startOfNextDay = day.plusDays(1).atStartOfDay();
+            Duration dayDuration = getDayDuration(person, day);
 
-            List<Checkin> checkins = checkinRepository.findByPersonAndCheckedInFalseAndTimeBetweenOrderByTimeDesc(person, startOfDay, startOfNextDay);
+            durations.add(formatDuration(dayDuration));
 
-            Duration duration = Duration.ZERO;
-            for (Checkin checkin : checkins)
-                duration = duration.plus(checkin.getDuration());
-
-            durations.add(formatDuration(duration));
-
-            weekTotal = weekTotal.plus(duration);
+            weekTotal = weekTotal.plus(dayDuration);
 
             if (day.getDayOfWeek() == DayOfWeek.SUNDAY) {
                 durations.add(formatDuration(weekTotal));
@@ -102,6 +96,34 @@ public class CheckinService {
         }
 
         return durations;
+    }
+
+    @Transactional(readOnly = true)
+    public Duration getLastWeekDuration(Person person) {
+
+        LocalDate today = LocalDate.now();
+        LocalDate previousSunday = today.with(TemporalAdjusters.previous(DayOfWeek.SUNDAY));
+
+        Duration weekTotal = Duration.ZERO;
+
+        for (LocalDate day = previousSunday; !day.isAfter(today); day = day.plusDays(1)) {
+            weekTotal = weekTotal.plus(getDayDuration(person, day));
+        }
+
+        return weekTotal;
+    }
+
+    public Duration getDayDuration(Person person, LocalDate day) {
+        LocalDateTime startOfDay = day.atStartOfDay();
+        LocalDateTime startOfNextDay = day.plusDays(1).atStartOfDay();
+
+        List<Checkin> checkins = checkinRepository.findByPersonAndCheckedInFalseAndTimeBetweenOrderByTimeDesc(person, startOfDay, startOfNextDay);
+
+        Duration duration = Duration.ZERO;
+        for (Checkin checkin : checkins)
+            duration = duration.plus(checkin.getDuration());
+
+        return duration;
     }
 
     public static long ceilMinutes(Duration duration) {
@@ -114,7 +136,6 @@ public class CheckinService {
     public static String formatDuration(Duration duration) {
         return duration.isZero() ? "" : String.format("%.1f", ceilMinutes(duration) / 60.0);
     }
-
 
     @Transactional(readOnly = true)
     public Duration getLastCheckInTime(Person person) {

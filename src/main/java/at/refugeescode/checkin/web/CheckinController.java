@@ -103,9 +103,9 @@ public class CheckinController {
 
         List<Attendance> attendances = new ArrayList<>();
         for (Person person : people)
-            attendances.add(new Attendance(person.getName(), checkinService.overviewDurations(yearMonth, person)));
+            attendances.add(new Attendance(person.getName(), checkinService.getOverviewDurations(yearMonth, person)));
 
-        List<String> columns = checkinService.overviewColumns(yearMonth);
+        List<String> columns = checkinService.getOverviewColumns(yearMonth);
 
         return new ResponseEntity<>(new Overview(yearMonth, columns, attendances), HttpStatus.OK);
     }

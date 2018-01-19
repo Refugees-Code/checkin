@@ -18,6 +18,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     public static final String ADMIN_ROLE = "ADMIN";
+    public static final String CLIENT_ROLE = "CLIENT";
 
     @Value("${checkin.auth.enabled}")
     private boolean authEnabled;
@@ -25,6 +26,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private String authUsername;
     @Value("${checkin.auth.password}")
     private String authPassword;
+    @Value("${checkin.auth.client.username}")
+    private String authClientUsername;
+    @Value("${checkin.auth.client.password}")
+    private String authClientPassword;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -35,8 +40,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     .httpBasic()
                     .and()
                     .authorizeRequests()
-                    .antMatchers("/public/**")
-                    .permitAll()
+                    .antMatchers("/public/**").permitAll()
+                    .antMatchers("/client/**").hasRole(CLIENT_ROLE)
                     .anyRequest().hasRole(ADMIN_ROLE)
                     .and()
                     .csrf().disable();
@@ -52,7 +57,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         if (authEnabled)
             auth
                     .inMemoryAuthentication()
-                    .withUser(authUsername).password(authPassword).roles(ADMIN_ROLE);
+                    .withUser(authUsername).password(authPassword).roles(ADMIN_ROLE)
+                    .and()
+                    .withUser(authClientUsername).password(authClientPassword).roles(CLIENT_ROLE);
     }
 
     @Bean

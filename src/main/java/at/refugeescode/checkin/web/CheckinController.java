@@ -92,6 +92,13 @@ public class CheckinController {
         return new ResponseEntity<>(new Overview(yearMonth, columns, attendances), HttpStatus.OK);
     }
 
+    @GetMapping("/client/summary")
+    @Transactional
+    public ResponseEntity<List<PersonStatusDetailProjection>> clientSummary() {
+        List<PersonStatusDetailProjection> personStatusList = createProjectionList(PersonStatusDetailProjection.class, personRepository.findAll());
+        return new ResponseEntity<>(personStatusList, HttpStatus.OK);
+    }
+
     @GetMapping("/public/summary")
     @Transactional
     public ResponseEntity<List<PersonStatusProjection>> publicSummary() {

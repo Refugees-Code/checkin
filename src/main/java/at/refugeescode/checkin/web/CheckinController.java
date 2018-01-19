@@ -16,12 +16,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -124,6 +122,36 @@ public class CheckinController {
         List<Checkin> checks = checkinRepository.findByPersonAndTimeBetweenOrderByTimeDesc(person, date.atStartOfDay(), date.plusDays(1).atStartOfDay());
 
         return new ResponseEntity<>(checks, HttpStatus.OK);
+    }
+
+    @PostMapping("/update-time/{id}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<Checkin> updateTime(
+            @PathVariable("id") Long id,
+            @RequestParam("time")  @DateTimeFormat(pattern = "HH:mm") LocalTime time) {
+
+        Checkin check = checkinRepository.findOne(id);
+        if (check == null)
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+        //TODO: wip
+//        LocalDateTime newDateTime = check.getTime().withHour(time.getHour()).withMinute(time.getMinute());
+//        Optional<Checkin> lastCheckOptional = checkinService.lastCheckBefore(check.getPerson(), check.getTime());
+//
+//        Duration newDuration;
+//        if (!lastCheckOptional.isPresent()) {
+//            newDuration = Duration.ZERO;
+//        }
+//        else {
+//            Checkin lastCheck = lastCheckOptional.get();
+//            newDuration = Duration.between(lastCheck.getTime(), newDateTime);
+//        }
+//
+//        check.setDuration(newDuration);
+//        check.setTime(newDateTime);
+//        check = checkinRepository.save(check);
+
+        return new ResponseEntity<>(check, HttpStatus.OK);
     }
 
     @GetMapping("/client/summary")

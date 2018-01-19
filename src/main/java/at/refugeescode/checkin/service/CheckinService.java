@@ -50,6 +50,11 @@ public class CheckinService {
     }
 
     @Transactional(readOnly = true)
+    public Optional<Checkin> lastCheckBefore(Person person, LocalDateTime end) {
+        return checkinRepository.findFirstByPersonAndTimeBeforeOrderByTimeDesc(person, end);
+    }
+
+    @Transactional(readOnly = true)
     public boolean isCheckedIn(Person person) {
         return lastCheck(person).map(Checkin::isCheckedIn).orElse(false);
     }

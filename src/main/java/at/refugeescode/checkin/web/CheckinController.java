@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -37,6 +39,8 @@ public class CheckinController {
     private final PersonService personService;
     @NonNull
     private final CheckinService checkinService;
+    @NonNull
+    private final CheckinRepository checkinRepository;
     @NonNull
     private final ProjectionFactory projectionFactory;
 
@@ -73,7 +77,6 @@ public class CheckinController {
     public ResponseEntity<Boolean> status(@PathVariable("uid") String uid) {
 
         Person person = personRepository.findByUid(uid);
-
         if (person == null)
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
@@ -85,7 +88,6 @@ public class CheckinController {
     public ResponseEntity<Person> disable(@PathVariable("uid") String uid) {
 
         Person person = personRepository.findByUid(uid);
-
         if (person == null)
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
@@ -107,6 +109,21 @@ public class CheckinController {
             attendances.add(new Attendance(person.getName(), checkinService.getOverviewDurations(yearMonth, person)));
 
         return new ResponseEntity<>(new Overview(yearMonth, columns, attendances), HttpStatus.OK);
+    }
+
+    @GetMapping("/checks/{uid}/{date}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<Checkin>> checksByPersonAndDate(
+            @PathVariable("uid") String uid,
+            @PathVariable("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+
+        Person person = personRepository.findByUid(uid);
+        if (person == null)
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+        List<Checkin> checks = checkinRepository.findByPersonAndTimeBetweenOrderByTimeDesc(person, date.atStartOfDay(), date.plusDays(1).atStartOfDay());
+
+        return new ResponseEntity<>(checks, HttpStatus.OK);
     }
 
     @GetMapping("/client/summary")

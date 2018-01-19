@@ -99,7 +99,7 @@ public class CheckinController {
     @Transactional(readOnly = true)
     public ResponseEntity<Overview> overview(@PathVariable("yearMonth") YearMonth yearMonth) {
 
-        List<Person> people = personRepository.findAll();
+        List<Person> people = personService.findEnabledNonNewUsers();
 
         List<Attendance> attendances = new ArrayList<>();
         for (Person person : people)

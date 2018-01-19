@@ -100,12 +100,11 @@ public class CheckinController {
     public ResponseEntity<Overview> overview(@PathVariable("yearMonth") YearMonth yearMonth) {
 
         List<Person> people = personService.findEnabledNonNewUsers();
+        List<String> columns = checkinService.getOverviewColumns(yearMonth);
 
         List<Attendance> attendances = new ArrayList<>();
         for (Person person : people)
             attendances.add(new Attendance(person.getName(), checkinService.getOverviewDurations(yearMonth, person)));
-
-        List<String> columns = checkinService.getOverviewColumns(yearMonth);
 
         return new ResponseEntity<>(new Overview(yearMonth, columns, attendances), HttpStatus.OK);
     }

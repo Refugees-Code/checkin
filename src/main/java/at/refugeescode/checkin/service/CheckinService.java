@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,9 @@ public class CheckinService {
             "Did you forget to check out today?<br/></br/>" +
             "You have been automatically checked out at midnight.<br/></br/>" +
             "Your refugees{code}-Team";
+
+    private static final String OVERVIEW_WEEK_COLUMN_PREFIX = "w-";
+    private static final String OVERVIEW_ESTIMATED_PREFIX = "~";
 
     @NonNull
     private final CheckinRepository checkinRepository;
@@ -65,7 +69,7 @@ public class CheckinService {
             columns.add(String.valueOf(day.getDayOfMonth()));
 
             if (day.getDayOfWeek() == DayOfWeek.SUNDAY)
-                columns.add("w-" + (++week));
+                columns.add(OVERVIEW_WEEK_COLUMN_PREFIX + (++week));
         }
 
         return columns;
@@ -80,18 +84,23 @@ public class CheckinService {
         LocalDate startOfNextMonth = yearMonth.plusMonths(1).atDay(1);
 
         Duration weekTotal = Duration.ZERO;
+        boolean weekEstimated = false;
 
         for (LocalDate day = startOfMonth; day.isBefore(startOfNextMonth); day = day.plusDays(1)) {
 
-            Duration dayDuration = getDayDuration(person, day);
+            Pair<Duration, Boolean> dayDurationPair = getDayDuration(person, day);
+            Duration dayDuration = dayDurationPair.getFirst();
+            boolean estimated = dayDurationPair.getSecond();
 
-            durations.add(formatDuration(dayDuration));
+            durations.add(formatDuration(dayDuration, estimated));
 
             weekTotal = weekTotal.plus(dayDuration);
+            weekEstimated = weekEstimated || estimated;
 
             if (day.getDayOfWeek() == DayOfWeek.SUNDAY) {
-                durations.add(formatDuration(weekTotal));
+                durations.add(formatDuration(weekTotal, weekEstimated));
                 weekTotal = Duration.ZERO;
+                weekEstimated = false;
             }
         }
 
@@ -107,23 +116,27 @@ public class CheckinService {
         Duration weekTotal = Duration.ZERO;
 
         for (LocalDate day = previousSunday; !day.isAfter(today); day = day.plusDays(1)) {
-            weekTotal = weekTotal.plus(getDayDuration(person, day));
+            weekTotal = weekTotal.plus(getDayDuration(person, day).getFirst());
         }
 
         return weekTotal;
     }
 
-    public Duration getDayDuration(Person person, LocalDate day) {
+    public Pair<Duration, Boolean> getDayDuration(Person person, LocalDate day) {
         LocalDateTime startOfDay = day.atStartOfDay();
         LocalDateTime startOfNextDay = day.plusDays(1).atStartOfDay();
 
         List<Checkin> checkins = checkinRepository.findByPersonAndCheckedInFalseAndTimeBetweenOrderByTimeDesc(person, startOfDay, startOfNextDay);
 
         Duration duration = Duration.ZERO;
-        for (Checkin checkin : checkins)
+        boolean estimated = false;
+        for (Checkin checkin : checkins) {
             duration = duration.plus(checkin.getDuration());
+            if (checkin.isAuto())
+                estimated = true;
+        }
 
-        return duration;
+        return Pair.of(duration, estimated);
     }
 
     public static long ceilMinutes(Duration duration) {
@@ -135,6 +148,10 @@ public class CheckinService {
 
     public static String formatDuration(Duration duration) {
         return duration.isZero() ? "" : String.format("%.1f", ceilMinutes(duration) / 60.0);
+    }
+
+    public static String formatDuration(Duration duration, boolean estimated) {
+        return estimated ? OVERVIEW_ESTIMATED_PREFIX : "" + formatDuration(duration);
     }
 
     @Transactional(readOnly = true)

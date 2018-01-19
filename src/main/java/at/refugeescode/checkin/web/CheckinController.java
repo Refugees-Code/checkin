@@ -80,7 +80,7 @@ public class CheckinController {
         return new ResponseEntity<>(checkinService.isCheckedIn(person), HttpStatus.OK);
     }
 
-    @PostMapping("/people/{uid}/disable")
+    @PostMapping("/people/{uid}/toggle")
     @Transactional(readOnly = false)
     public ResponseEntity<Person> disable(@PathVariable("uid") String uid) {
 
@@ -89,22 +89,7 @@ public class CheckinController {
         if (person == null)
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
-        person.setDisabled(true);
-        person = personRepository.save(person);
-
-        return new ResponseEntity<>(person, HttpStatus.OK);
-    }
-
-    @PostMapping("/people/{uid}/enable")
-    @Transactional(readOnly = false)
-    public ResponseEntity<Person> enable(@PathVariable("uid") String uid) {
-
-        Person person = personRepository.findByUid(uid);
-
-        if (person == null)
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-
-        person.setDisabled(false);
+        person.setDisabled(!person.isDisabled());
         person = personRepository.save(person);
 
         return new ResponseEntity<>(person, HttpStatus.OK);

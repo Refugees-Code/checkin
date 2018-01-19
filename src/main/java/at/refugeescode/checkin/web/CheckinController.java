@@ -5,6 +5,7 @@ import at.refugeescode.checkin.domain.*;
 import at.refugeescode.checkin.dto.Attendance;
 import at.refugeescode.checkin.dto.Overview;
 import at.refugeescode.checkin.service.CheckinService;
+import at.refugeescode.checkin.service.PersonService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,8 @@ public class CheckinController {
 
     @NonNull
     private final PersonRepository personRepository;
+    @NonNull
+    private final PersonService personService;
     @NonNull
     private final CheckinService checkinService;
     @NonNull
@@ -95,14 +98,16 @@ public class CheckinController {
     @GetMapping("/client/summary")
     @Transactional
     public ResponseEntity<List<PersonStatusDetailProjection>> clientSummary() {
-        List<PersonStatusDetailProjection> personStatusList = createProjectionList(PersonStatusDetailProjection.class, personRepository.findAll());
+        List<Person> all = personRepository.findAll();
+        List<PersonStatusDetailProjection> personStatusList = createProjectionList(PersonStatusDetailProjection.class, all);
         return new ResponseEntity<>(personStatusList, HttpStatus.OK);
     }
 
     @GetMapping("/public/summary")
     @Transactional
     public ResponseEntity<List<PersonStatusProjection>> publicSummary() {
-        List<PersonStatusProjection> personStatusList = createProjectionList(PersonStatusProjection.class, personRepository.findAll());
+        List<Person> nonNewUsers = personService.findNonNewUsers();
+        List<PersonStatusProjection> personStatusList = createProjectionList(PersonStatusProjection.class, nonNewUsers);
         return new ResponseEntity<>(personStatusList, HttpStatus.OK);
     }
 

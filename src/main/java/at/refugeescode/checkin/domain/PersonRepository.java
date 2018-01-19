@@ -12,4 +12,6 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
 
     List<Person> findAllByOrderByName();
 
+    List<Person> findByNameIsNotLike(String nameNotLike);
+
 }

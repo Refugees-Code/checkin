@@ -151,7 +151,7 @@ public class CheckinService {
     }
 
     public static String formatDuration(Duration duration, boolean estimated) {
-        return estimated ? OVERVIEW_ESTIMATED_PREFIX : "" + formatDuration(duration);
+        return (estimated ? OVERVIEW_ESTIMATED_PREFIX : "") + formatDuration(duration);
     }
 
     @Transactional(readOnly = true)

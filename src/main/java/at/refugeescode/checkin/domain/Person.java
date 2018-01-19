@@ -14,7 +14,7 @@ import javax.persistence.Id;
 @Setter
 @NoArgsConstructor
 @RequiredArgsConstructor
-@ToString(of = {"uid", "name", "email"})
+@ToString(of = {"uid", "name", "email", "disabled"})
 public class Person {
 
     @Id
@@ -36,8 +36,9 @@ public class Person {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column
     private String slackHandle;
+
+    private boolean disabled;
 
     @JsonIgnore
     public String getShortName() {

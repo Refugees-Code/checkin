@@ -18,4 +18,6 @@ public interface PersonStatusDetailProjection {
     @Value("#{@checkinService.getLastCheckInTime(target)}")
     Duration getLastDuration();
 
+    boolean isDisabled();
+
 }

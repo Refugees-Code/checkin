@@ -54,7 +54,7 @@ public class CheckinController {
     }
 
     @GetMapping("/people/{uid}/checkin")
-    @Transactional
+    @Transactional(readOnly = false)
     public ResponseEntity<Boolean> checkin(@PathVariable("uid") String uid) {
 
         Checkin checkin = checkinService.newCheck(uid, false);
@@ -69,7 +69,7 @@ public class CheckinController {
     }
 
     @GetMapping("/people/{uid}/status")
-    @Transactional
+    @Transactional(readOnly = true)
     public ResponseEntity<Boolean> status(@PathVariable("uid") String uid) {
 
         Person person = personRepository.findByUid(uid);
@@ -80,8 +80,38 @@ public class CheckinController {
         return new ResponseEntity<>(checkinService.isCheckedIn(person), HttpStatus.OK);
     }
 
+    @PostMapping("/people/{uid}/disable")
+    @Transactional(readOnly = false)
+    public ResponseEntity<Boolean> disable(@PathVariable("uid") String uid) {
+
+        Person person = personRepository.findByUid(uid);
+
+        if (person == null)
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+        person.setDisabled(true);
+        personRepository.save(person);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("/people/{uid}/enable")
+    @Transactional(readOnly = false)
+    public ResponseEntity<Boolean> enable(@PathVariable("uid") String uid) {
+
+        Person person = personRepository.findByUid(uid);
+
+        if (person == null)
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+        person.setDisabled(false);
+        personRepository.save(person);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @GetMapping("/overview/{yearMonth}")
-    @Transactional
+    @Transactional(readOnly = true)
     public ResponseEntity<Overview> overview(@PathVariable("yearMonth") YearMonth yearMonth) {
 
         List<Person> people = personRepository.findAll();
@@ -96,7 +126,7 @@ public class CheckinController {
     }
 
     @GetMapping("/client/summary")
-    @Transactional
+    @Transactional(readOnly = true)
     public ResponseEntity<List<PersonStatusDetailProjection>> clientSummary() {
         List<Person> all = personRepository.findAll();
         List<PersonStatusDetailProjection> personStatusList = createProjectionList(PersonStatusDetailProjection.class, all);
@@ -104,9 +134,9 @@ public class CheckinController {
     }
 
     @GetMapping("/public/summary")
-    @Transactional
+    @Transactional(readOnly = true)
     public ResponseEntity<List<PersonStatusProjection>> publicSummary() {
-        List<Person> nonNewUsers = personService.findNonNewUsers();
+        List<Person> nonNewUsers = personService.findEnabledNonNewUsers();
         List<PersonStatusProjection> personStatusList = createProjectionList(PersonStatusProjection.class, nonNewUsers);
         return new ResponseEntity<>(personStatusList, HttpStatus.OK);
     }

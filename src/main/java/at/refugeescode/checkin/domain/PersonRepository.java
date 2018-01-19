@@ -10,8 +10,10 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
 
     Person findByUid(String uid);
 
-    List<Person> findAllByOrderByName();
+    List<Person> findByOrderByName();
 
-    List<Person> findByNameIsNotLike(String nameNotLike);
+    List<Person> findByDisabledFalse();
+
+    List<Person> findByDisabledFalseAndNameIsNotLike(String nameNotLike);
 
 }

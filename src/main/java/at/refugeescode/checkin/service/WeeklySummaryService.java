@@ -67,7 +67,7 @@ public class WeeklySummaryService {
 
         StringBuilder rowMessageBuilder = new StringBuilder();
 
-        for (Person person : personRepository.findAllByOrderByName()) {
+        for (Person person : personRepository.findByOrderByName()) {
 
             Duration total = Duration.ZERO;
             List<Checkin> checkins = checkinRepository.findByPersonAndCheckedInFalseOrderByTime(person);

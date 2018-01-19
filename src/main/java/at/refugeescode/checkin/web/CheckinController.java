@@ -82,7 +82,7 @@ public class CheckinController {
 
     @PostMapping("/people/{uid}/disable")
     @Transactional(readOnly = false)
-    public ResponseEntity<Boolean> disable(@PathVariable("uid") String uid) {
+    public ResponseEntity<Person> disable(@PathVariable("uid") String uid) {
 
         Person person = personRepository.findByUid(uid);
 
@@ -90,14 +90,14 @@ public class CheckinController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
         person.setDisabled(true);
-        personRepository.save(person);
+        person = personRepository.save(person);
 
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(person, HttpStatus.OK);
     }
 
     @PostMapping("/people/{uid}/enable")
     @Transactional(readOnly = false)
-    public ResponseEntity<Boolean> enable(@PathVariable("uid") String uid) {
+    public ResponseEntity<Person> enable(@PathVariable("uid") String uid) {
 
         Person person = personRepository.findByUid(uid);
 
@@ -105,9 +105,9 @@ public class CheckinController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
         person.setDisabled(false);
-        personRepository.save(person);
+        person = personRepository.save(person);
 
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(person, HttpStatus.OK);
     }
 
     @GetMapping("/overview/{yearMonth}")

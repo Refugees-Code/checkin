@@ -124,7 +124,7 @@ public class CheckinService {
     }
 
     @Transactional(readOnly = false)
-    public Checkin newCheck(String uid) {
+    public Checkin newCheck(String uid, boolean auto) {
         Person person = personRepository.findByUid(uid);
 
         if (person == null) {
@@ -137,12 +137,12 @@ public class CheckinService {
         Checkin check;
 
         if (!lastCheckOptional.isPresent()) {
-            check = new Checkin(person, now, Duration.ZERO, true);
+            check = new Checkin(person, now, Duration.ZERO, true, auto);
         }
         else {
             Checkin lastCheck = lastCheckOptional.get();
             Duration duration = Duration.between(lastCheck.getTime(), now);
-            check = new Checkin(person, now, duration, !lastCheck.isCheckedIn());
+            check = new Checkin(person, now, duration, !lastCheck.isCheckedIn(), auto);
         }
 
         check = checkinRepository.save(check);
@@ -156,7 +156,7 @@ public class CheckinService {
         List<Person> people = personRepository.findAll();
         for (Person person : people) {
             if (isCheckedIn(person)) {
-                newCheck(person.getUid());
+                newCheck(person.getUid(), true);
 
                 mailService.sendMail(person, null, webmaster,
                         "RefugeesCode Attendance - Forgot to check out?",

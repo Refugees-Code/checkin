@@ -33,10 +33,13 @@ public class Checkin {
 
     private boolean checkedIn;
 
-    public Checkin(Person person, LocalDateTime time, Duration duration, boolean checkedIn) {
+    private boolean auto;
+
+    public Checkin(Person person, LocalDateTime time, Duration duration, boolean checkedIn, boolean auto) {
         this.person = person;
         this.time = time;
         this.duration = duration;
         this.checkedIn = checkedIn;
+        this.auto = auto;
     }
 }

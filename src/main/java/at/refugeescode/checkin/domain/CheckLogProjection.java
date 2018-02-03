@@ -13,6 +13,7 @@ public interface CheckLogProjection {
 
     LocalDateTime getTime();
 
+    @Value("#{@checkinService.getDuration(target)}")
     Duration getDuration();
 
     @Value("#{target.person.name}")

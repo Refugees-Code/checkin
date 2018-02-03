@@ -134,22 +134,8 @@ public class CheckinController {
         if (check == null)
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
-        //TODO: wip
-//        LocalDateTime newDateTime = check.getTime().withHour(time.getHour()).withMinute(time.getMinute());
-//        Optional<Checkin> lastCheckOptional = checkinService.lastCheckBefore(check.getPerson(), check.getTime());
-//
-//        Duration newDuration;
-//        if (!lastCheckOptional.isPresent()) {
-//            newDuration = Duration.ZERO;
-//        }
-//        else {
-//            Checkin lastCheck = lastCheckOptional.get();
-//            newDuration = Duration.between(lastCheck.getTime(), newDateTime);
-//        }
-//
-//        check.setDuration(newDuration);
-//        check.setTime(newDateTime);
-//        check = checkinRepository.save(check);
+        check.setTime(check.getTime().withHour(time.getHour()).withMinute(time.getMinute()));
+        check = checkinRepository.save(check);
 
         return new ResponseEntity<>(check, HttpStatus.OK);
     }

@@ -44,6 +44,8 @@ public class WeeklySummaryService {
     @NonNull
     private final CheckinRepository checkinRepository;
     @NonNull
+    private final CheckinService checkinService;
+    @NonNull
     private final MailService mailService;
 
     @Value("${checkin.mail.trainer}")
@@ -73,7 +75,7 @@ public class WeeklySummaryService {
             List<Checkin> checkins = checkinRepository.findByPersonAndCheckedInFalseOrderByTime(person);
             for (Checkin checkin : checkins) {
                 if (checkin.getTime().isAfter(startOfLastWeek) && !checkin.getTime().isAfter(startOfToday))
-                    total = total.plus(checkin.getDuration());
+                    total = total.plus(checkinService.getDuration(checkin));
             }
 
             rowMessageBuilder.append(String.format(SUMMARY_ROW,

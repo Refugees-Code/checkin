@@ -26,6 +26,7 @@ import java.util.Optional;
 @Slf4j
 public class CheckinService {
 
+    private static final String FORGOT_CHECK_OUT_SUBJECT = "RefugeesCode Attendance - Forgot to check out?";
     private static final String FORGOT_CHECK_OUT_MESSAGE = "Hello %s!<br/><br/>" +
             "Did you forget to check out today?<br/></br/>" +
             "You have been automatically checked out at midnight.<br/></br/>" +
@@ -33,6 +34,8 @@ public class CheckinService {
 
     private static final String OVERVIEW_WEEK_COLUMN_PREFIX = "w-";
     private static final String OVERVIEW_ESTIMATED_PREFIX = "~";
+
+    private static final String NEW_USER_PREFIX = "new-user-";
 
     @NonNull
     private final CheckinRepository checkinRepository;
@@ -57,6 +60,13 @@ public class CheckinService {
     @Transactional(readOnly = true)
     public boolean isCheckedIn(Person person) {
         return lastCheck(person).map(Checkin::isCheckedIn).orElse(false);
+    }
+
+    @Transactional(readOnly = true)
+    public Duration getDuration(Checkin check) {
+        LocalDateTime time = check.getTime();
+        Optional<Checkin> before = checkinRepository.findFirstByPersonAndTimeBeforeOrderByTimeDesc(check.getPerson(), time);
+        return before.isPresent() ? Duration.between(before.get().getTime(), time) : Duration.ZERO;
     }
 
     @Transactional(readOnly = true)
@@ -136,7 +146,7 @@ public class CheckinService {
         Duration duration = Duration.ZERO;
         boolean estimated = false;
         for (Checkin checkin : checkins) {
-            duration = duration.plus(checkin.getDuration());
+            duration = duration.plus(getDuration(checkin));
             if (checkin.isAuto())
                 estimated = true;
         }
@@ -171,27 +181,18 @@ public class CheckinService {
         Person person = personRepository.findByUid(uid);
 
         if (person == null) {
-            String placeholder = "new-user-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
+            String placeholder = NEW_USER_PREFIX + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
             Person newUser = new Person(uid, placeholder, placeholder);
             newUser.setDisabled(true);
             person = personRepository.save(newUser);
         }
 
-        Optional<Checkin> lastCheckOptional = lastCheck(person);
+        Optional<Checkin> lastCheck = lastCheck(person);
         LocalDateTime now = LocalDateTime.now();
-        Checkin check;
+        boolean checkedIn = lastCheck.map(check -> !check.isCheckedIn()).orElse(true);
 
-        if (!lastCheckOptional.isPresent()) {
-            check = new Checkin(person, now, Duration.ZERO, true, auto);
-        }
-        else {
-            Checkin lastCheck = lastCheckOptional.get();
-            Duration duration = Duration.between(lastCheck.getTime(), now);
-            check = new Checkin(person, now, duration, !lastCheck.isCheckedIn(), auto);
-        }
-
+        Checkin check = new Checkin(person, now, checkedIn, auto);
         check = checkinRepository.save(check);
-
         return check;
     }
 
@@ -204,7 +205,7 @@ public class CheckinService {
                 newCheck(person.getUid(), true);
 
                 mailService.sendMail(person, null, webmaster,
-                        "RefugeesCode Attendance - Forgot to check out?",
+                        FORGOT_CHECK_OUT_SUBJECT,
                         String.format(FORGOT_CHECK_OUT_MESSAGE, person.getName()));
             }
         }

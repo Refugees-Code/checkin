@@ -1,4 +1,4 @@
-### checkin webapp
+### Check-in webapp
 
 A simple Spring Boot web application, with Spring Data REST to process check ins and check outs via HTTP and store them in a PostgreSQL database.
 
@@ -8,3 +8,8 @@ If you need to, you can adjust the settings in the `application.properties`.
 To start the application, use
 
     mvn spring-boot:run
+
+### Related repositories:
+
+NFC card reader: https://github.com/RefugeesCodeAT/rc-check-in-card-reader
+Frontend: https://github.com/RefugeesCodeAT/Attendance

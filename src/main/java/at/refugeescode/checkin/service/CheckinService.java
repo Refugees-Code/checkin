@@ -172,7 +172,9 @@ public class CheckinService {
 
         if (person == null) {
             String placeholder = "new-user-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
-            person = personRepository.save(new Person(uid, placeholder, placeholder));
+            Person newUser = new Person(uid, placeholder, placeholder);
+            newUser.setDisabled(true);
+            person = personRepository.save(newUser);
         }
 
         Optional<Checkin> lastCheckOptional = lastCheck(person);

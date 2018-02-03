@@ -21,7 +21,7 @@ public class PersonService {
 
     @Transactional(readOnly = true)
     public List<Person> findEnabledNonNewUsers() {
-        return personRepository.findByDisabledFalseAndNameIsNotLike("new-user-%");
+        return personRepository.findByDisabledFalse();
     }
 
     @Transactional(readOnly = false)

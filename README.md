@@ -11,5 +11,5 @@ To start the application, use
 
 ### Related repositories:
 
-NFC card reader: https://github.com/RefugeesCodeAT/rc-check-in-card-reader
+NFC card reader: https://github.com/RefugeesCodeAT/rc-check-in-card-reader  
 Frontend: https://github.com/RefugeesCodeAT/Attendance

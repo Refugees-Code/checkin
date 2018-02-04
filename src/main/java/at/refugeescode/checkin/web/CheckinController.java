@@ -57,7 +57,7 @@ public class CheckinController {
 
     @GetMapping("/people/{uid}/checkin")
     @Transactional(readOnly = false)
-    public ResponseEntity<Boolean> checkin(@PathVariable("uid") String uid) {
+    public ResponseEntity<Checkin> checkin(@PathVariable("uid") String uid) {
 
         Checkin checkin = checkinService.newCheck(uid, false);
 
@@ -67,7 +67,7 @@ public class CheckinController {
                 DateTimeFormatter.ofPattern("dd.MM.YYYY HH:mm").format(checkin.getTime())
         );
 
-        return new ResponseEntity<>(checkin.isCheckedIn(), HttpStatus.OK);
+        return new ResponseEntity<>(checkin, HttpStatus.OK);
     }
 
     @GetMapping("/people/{uid}/status")

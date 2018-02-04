@@ -81,7 +81,7 @@ public class CheckinController {
         return new ResponseEntity<>(checkinService.isCheckedIn(person), HttpStatus.OK);
     }
 
-    @PostMapping("/people/{uid}/toggle")
+    @PutMapping("/people/{uid}/toggle")
     @Transactional(readOnly = false)
     public ResponseEntity<Person> disable(@PathVariable("uid") String uid) {
 
@@ -124,7 +124,7 @@ public class CheckinController {
         return new ResponseEntity<>(checks, HttpStatus.OK);
     }
 
-    @PostMapping("/update-time/{id}")
+    @PutMapping("/update-time/{id}")
     @Transactional(readOnly = true)
     public ResponseEntity<Checkin> updateTime(
             @PathVariable("id") Long id,

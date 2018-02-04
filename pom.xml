@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>at.refugeescode</groupId>
-	<artifactId>checkin</artifactId>
+	<artifactId>rc-check-in-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>checkin</name>
+	<name>rc-check-in-backend</name>
 	<description>RefugeesCode Checkin REST Service</description>
 
 	<parent>

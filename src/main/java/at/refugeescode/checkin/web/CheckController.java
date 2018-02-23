@@ -55,7 +55,6 @@ public class CheckController {
     }
 
     @GetMapping("/people/{uid}/checkin")
-    @Transactional(readOnly = false)
     public ResponseEntity<CheckStatusProjection> newCheck(@PathVariable("uid") String uid) {
 
         Check check = checkService.newCheck(uid, false);
@@ -71,7 +70,6 @@ public class CheckController {
     }
 
     @GetMapping("/people/{uid}/status")
-    @Transactional(readOnly = true)
     public ResponseEntity<Boolean> status(@PathVariable("uid") String uid) {
 
         Person person = personRepository.findByUid(uid);
@@ -82,7 +80,6 @@ public class CheckController {
     }
 
     @PutMapping("/people/{uid}/toggle")
-    @Transactional(readOnly = false)
     public ResponseEntity<Person> toggle(@PathVariable("uid") String uid) {
 
         Person person = personRepository.findByUid(uid);
@@ -103,10 +100,7 @@ public class CheckController {
         if (person == null)
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
-        List<Check> checks = checkRepository.findByPerson(person);
-        checkRepository.delete(checks);
-
-        personRepository.delete(person);
+        personService.delete(person);
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

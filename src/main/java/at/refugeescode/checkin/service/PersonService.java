@@ -1,5 +1,7 @@
 package at.refugeescode.checkin.service;
 
+import at.refugeescode.checkin.domain.Check;
+import at.refugeescode.checkin.domain.CheckRepository;
 import at.refugeescode.checkin.domain.Person;
 import at.refugeescode.checkin.domain.PersonRepository;
 import lombok.NonNull;
@@ -18,6 +20,8 @@ public class PersonService {
 
     @NonNull
     private final PersonRepository personRepository;
+    @NonNull
+    private final CheckRepository checkRepository;
 
     @Transactional(readOnly = true)
     public List<Person> findEnabledUsers() {
@@ -35,5 +39,12 @@ public class PersonService {
         personRepository.save(person);
 
         return true;
+    }
+
+    @Transactional(readOnly = false)
+    public void delete(Person person) {
+        List<Check> checks = checkRepository.findByPerson(person);
+        checkRepository.delete(checks);
+        personRepository.delete(person);
     }
 }

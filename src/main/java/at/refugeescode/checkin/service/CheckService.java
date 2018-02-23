@@ -4,6 +4,7 @@ import at.refugeescode.checkin.domain.Check;
 import at.refugeescode.checkin.domain.CheckRepository;
 import at.refugeescode.checkin.domain.Person;
 import at.refugeescode.checkin.domain.PersonRepository;
+import at.refugeescode.checkin.dto.Summary;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +67,11 @@ public class CheckService {
     @Transactional(readOnly = true)
     public boolean isCheckedIn(Person person) {
         return lastCheck(person).map(Check::isCheckedIn).orElse(false);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isAuto(Person person) {
+        return lastCheck(person).map(Check::isAuto).orElse(false);
     }
 
     @Transactional(readOnly = true)
@@ -242,6 +248,23 @@ public class CheckService {
         LocalDateTime now = LocalDateTime.now();
         Optional<LocalDateTime> lastTime = lastCheck(person).map(Check::getTime);
         return lastTime.isPresent() ? Duration.between(lastTime.get(), now) : null;
+    }
+
+    @Transactional(readOnly = true)
+    public Summary getSummary(Person person) {
+        String name = person.getName();
+        LocalDateTime now = LocalDateTime.now();
+
+        Optional<Check> lastCheck = lastCheck(person);
+        Optional<LocalDateTime> lastTime = lastCheck.map(Check::getTime);
+
+        boolean checkedIn = lastCheck.map(Check::isCheckedIn).orElse(false);
+        boolean auto = lastCheck.map(Check::isAuto).orElse(false);
+
+        Duration lastDuration = lastTime.isPresent() ? Duration.between(lastTime.get(), now) : null;
+        Duration weekDuration = getLastWeekDuration(person);
+
+        return new Summary(name, checkedIn, auto, lastDuration, weekDuration);
     }
 
     @Transactional(readOnly = false)

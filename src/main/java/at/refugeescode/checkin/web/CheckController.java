@@ -4,6 +4,7 @@ import at.refugeescode.checkin.config.SlackAppender;
 import at.refugeescode.checkin.domain.*;
 import at.refugeescode.checkin.dto.Attendance;
 import at.refugeescode.checkin.dto.Overview;
+import at.refugeescode.checkin.dto.Summary;
 import at.refugeescode.checkin.service.CheckService;
 import at.refugeescode.checkin.service.PersonService;
 import lombok.NonNull;
@@ -159,10 +160,12 @@ public class CheckController {
 
     @GetMapping("/public/summary")
     @Transactional(readOnly = true)
-    public ResponseEntity<List<PersonStatusProjection>> publicSummary() {
+    public ResponseEntity<List<Summary>> publicSummary() {
         List<Person> enabledUsers = personService.findEnabledUsers();
-        List<PersonStatusProjection> personStatusList = createProjectionList(PersonStatusProjection.class, enabledUsers);
-        return new ResponseEntity<>(personStatusList, HttpStatus.OK);
+        List<Summary> summaries = enabledUsers.stream()
+                .map(checkService::getSummary)
+                .collect(Collectors.toList());
+        return new ResponseEntity<>(summaries, HttpStatus.OK);
     }
 
     private <T> List<T> createProjectionList(Class<T> projectionType, List<?> sourceList) {

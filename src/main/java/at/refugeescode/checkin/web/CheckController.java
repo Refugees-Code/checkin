@@ -6,11 +6,15 @@ import at.refugeescode.checkin.dto.Attendance;
 import at.refugeescode.checkin.dto.Overview;
 import at.refugeescode.checkin.dto.Summary;
 import at.refugeescode.checkin.service.CheckService;
+import at.refugeescode.checkin.service.OverviewService;
 import at.refugeescode.checkin.service.PersonService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +26,10 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 @RestController
@@ -37,9 +44,13 @@ public class CheckController {
     @NonNull
     private final CheckService checkService;
     @NonNull
+    private final OverviewService overviewService;
+    @NonNull
     private final CheckRepository checkRepository;
     @NonNull
     private final ProjectionFactory projectionFactory;
+    @NonNull
+    private final CacheManager cacheManager;
 
     @GetMapping("/hello")
     public ResponseEntity<Void> hello() {
@@ -110,12 +121,12 @@ public class CheckController {
     public ResponseEntity<Overview> overview(@PathVariable("yearMonth") YearMonth yearMonth) {
 
         List<Person> people = personService.findEnabledUsers();
-        List<String> columns = checkService.getOverviewColumns(yearMonth);
-        List<String> avgCheckOutTimes = checkService.getOverviewAvgCheckOutTimes(yearMonth);
+        List<String> columns = overviewService.getOverviewColumns(yearMonth);
+        List<String> avgCheckOutTimes = overviewService.getOverviewAvgCheckOutTimes(yearMonth);
 
         List<Attendance> attendances = new ArrayList<>();
         for (Person person : people)
-            attendances.add(new Attendance(person.getName(), checkService.getOverviewDurations(yearMonth, person)));
+            attendances.add(new Attendance(person.getName(), overviewService.getOverviewDurations(yearMonth, person)));
 
         return new ResponseEntity<>(new Overview(yearMonth, columns, attendances, avgCheckOutTimes), HttpStatus.OK);
     }
@@ -158,7 +169,7 @@ public class CheckController {
     public ResponseEntity<List<Summary>> publicSummary() {
         List<Person> enabledUsers = personService.findEnabledUsers();
         List<Summary> summaries = enabledUsers.stream()
-                .map(checkService::getSummary)
+                .map(overviewService::getSummary)
                 .collect(Collectors.toList());
         return new ResponseEntity<>(summaries, HttpStatus.OK);
     }
@@ -167,6 +178,21 @@ public class CheckController {
         return sourceList.stream()
                 .map(source -> projectionFactory.createProjection(projectionType, source))
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping(value = "/dump-caches")
+    public ResponseEntity<Map<String, Map<Object, Object>>> dumpCaches() {
+        Map<String, Map<Object, Object>> result = new HashMap<>();
+        for (String cacheName : cacheManager.getCacheNames()) {
+            log.info("Cache: {}", cacheName);
+            Cache cache = cacheManager.getCache(cacheName);
+            ConcurrentMapCache concurrentMapCache = (ConcurrentMapCache) cache;
+            ConcurrentMap<Object, Object> nativeCache = concurrentMapCache.getNativeCache();
+            for (Map.Entry<Object, Object> entry : nativeCache.entrySet())
+                log.info("{}: {}", entry.getKey(), entry.getValue());
+            result.put(cacheName, nativeCache);
+        }
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
 }

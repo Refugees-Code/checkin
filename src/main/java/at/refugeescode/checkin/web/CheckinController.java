@@ -83,7 +83,7 @@ public class CheckinController {
 
     @PutMapping("/people/{uid}/toggle")
     @Transactional(readOnly = false)
-    public ResponseEntity<Person> disable(@PathVariable("uid") String uid) {
+    public ResponseEntity<Person> toggle(@PathVariable("uid") String uid) {
 
         Person person = personRepository.findByUid(uid);
         if (person == null)
@@ -93,6 +93,22 @@ public class CheckinController {
         person = personRepository.save(person);
 
         return new ResponseEntity<>(person, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/people/{uid}/deleteWithCheckins")
+    @Transactional(readOnly = false)
+    public ResponseEntity<Void> deleteWithCheckins(@PathVariable("uid") String uid) {
+
+        Person person = personRepository.findByUid(uid);
+        if (person == null)
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+        List<Checkin> checkins = checkinRepository.findByPerson(person);
+        checkinRepository.delete(checkins);
+
+        personRepository.delete(person);
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/overview/{yearMonth}")

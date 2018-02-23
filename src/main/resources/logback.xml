@@ -24,8 +24,6 @@
                     return true;
                 else if (marker != null &amp;&amp; marker.contains("SEND_MAIL"))
                     return true;
-                else if (marker != null &amp;&amp; marker.contains("SEND_MAIL_AND_POST_TO_SLACK"))
-                    return true;
                 else
                     return false;
             </expression>

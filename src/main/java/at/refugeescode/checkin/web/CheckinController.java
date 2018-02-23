@@ -95,9 +95,9 @@ public class CheckinController {
         return new ResponseEntity<>(person, HttpStatus.OK);
     }
 
-    @DeleteMapping("/people/{uid}/deleteWithCheckins")
+    @DeleteMapping("/people/{uid}/delete")
     @Transactional(readOnly = false)
-    public ResponseEntity<Void> deleteWithCheckins(@PathVariable("uid") String uid) {
+    public ResponseEntity<Void> delete(@PathVariable("uid") String uid) {
 
         Person person = personRepository.findByUid(uid);
         if (person == null)
@@ -108,7 +108,7 @@ public class CheckinController {
 
         personRepository.delete(person);
 
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/overview/{yearMonth}")

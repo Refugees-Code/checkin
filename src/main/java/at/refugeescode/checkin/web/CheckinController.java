@@ -125,7 +125,7 @@ public class CheckinController {
 
     @GetMapping("/checks/{uid}/{yearMonth}")
     @Transactional(readOnly = true)
-    public ResponseEntity<List<Checkin>> checksByPersonAndDate(
+    public ResponseEntity<List<CheckinProjection>> checksByPersonAndDate(
             @PathVariable("uid") String uid,
             @PathVariable("yearMonth") YearMonth yearMonth) {
 
@@ -138,7 +138,7 @@ public class CheckinController {
                 yearMonth.atDay(1).atStartOfDay(),
                 yearMonth.atEndOfMonth().plusDays(1).atStartOfDay());
 
-        return new ResponseEntity<>(checks, HttpStatus.OK);
+        return new ResponseEntity<>(createProjectionList(CheckinProjection.class, checks), HttpStatus.OK);
     }
 
     @GetMapping("/client/summary")

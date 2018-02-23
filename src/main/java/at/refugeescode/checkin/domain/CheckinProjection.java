@@ -7,9 +7,11 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Projection(name = "log", types = Checkin.class)
-public interface CheckLogProjection {
+public interface CheckinProjection {
 
     boolean isCheckedIn();
+
+    boolean isAuto();
 
     LocalDateTime getTime();
 

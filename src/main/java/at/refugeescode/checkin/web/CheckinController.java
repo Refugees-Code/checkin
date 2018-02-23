@@ -117,12 +117,13 @@ public class CheckinController {
 
         List<Person> people = personService.findEnabledNonNewUsers();
         List<String> columns = checkinService.getOverviewColumns(yearMonth);
+        List<LocalTime> avgCheckOutTimes = checkinService.getOverviewAvgCheckOutTimes(yearMonth);
 
         List<Attendance> attendances = new ArrayList<>();
         for (Person person : people)
             attendances.add(new Attendance(person.getName(), checkinService.getOverviewDurations(yearMonth, person)));
 
-        return new ResponseEntity<>(new Overview(yearMonth, columns, attendances), HttpStatus.OK);
+        return new ResponseEntity<>(new Overview(yearMonth, columns, attendances, avgCheckOutTimes), HttpStatus.OK);
     }
 
     @GetMapping("/checks/{uid}/{date}")

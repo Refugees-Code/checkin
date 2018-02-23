@@ -20,6 +20,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalDouble;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -70,6 +71,13 @@ public class CheckinService {
     }
 
     @Transactional(readOnly = true)
+    public Duration getEstimatedDuration(Checkin check, LocalTime avgCheckOutTime) {
+        LocalDateTime time = check.getTime();
+        Optional<Checkin> before = checkinRepository.findFirstByPersonAndTimeBeforeOrderByTimeDesc(check.getPerson(), time);
+        return before.isPresent() ? Duration.between(before.get().getTime(), avgCheckOutTime) : Duration.ZERO;
+    }
+
+    @Transactional(readOnly = true)
     public List<String> getOverviewColumns(YearMonth yearMonth) {
 
         List<String> columns = new ArrayList<>(yearMonth.lengthOfMonth());
@@ -93,7 +101,7 @@ public class CheckinService {
     @Transactional(readOnly = true)
     public List<String> getOverviewDurations(YearMonth yearMonth, Person person) {
 
-        List<String> durations = new ArrayList<>(yearMonth.lengthOfMonth());
+        List<String> durations = new ArrayList<>(yearMonth.lengthOfMonth()+4);
 
         LocalDate startOfMonth = yearMonth.atDay(1);
         LocalDate startOfNextMonth = yearMonth.plusMonths(1).atDay(1);
@@ -123,6 +131,25 @@ public class CheckinService {
     }
 
     @Transactional(readOnly = true)
+    public List<LocalTime> getOverviewAvgCheckOutTimes(YearMonth yearMonth) {
+
+        List<LocalTime> avgCheckOutTimes = new ArrayList<>(yearMonth.lengthOfMonth()+4);
+
+        LocalDate startOfMonth = yearMonth.atDay(1);
+        LocalDate startOfNextMonth = yearMonth.plusMonths(1).atDay(1);
+
+        for (LocalDate day = startOfMonth; day.isBefore(startOfNextMonth); day = day.plusDays(1)) {
+            LocalTime avgCheckOutTime = getAvgCheckOutTime(day);
+            avgCheckOutTimes.add(getAvgCheckOutTime(day));
+            if (day.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                avgCheckOutTimes.add(null);
+            }
+        }
+
+        return avgCheckOutTimes;
+    }
+
+    @Transactional(readOnly = true)
     public Duration getLastWeekDuration(Person person) {
 
         LocalDate today = LocalDate.now();
@@ -137,21 +164,50 @@ public class CheckinService {
         return weekTotal;
     }
 
+    public LocalTime getAvgCheckOutTime(LocalDate day) {
+        LocalDateTime startOfDay = day.atStartOfDay();
+        LocalDateTime startOfNextDay = day.plusDays(1).atStartOfDay();
+
+        List<Checkin> checkins = checkinRepository.findByCheckedInFalseAndAutoFalseAndTimeBetweenOrderByTimeDesc(startOfDay, startOfNextDay);
+        //TODO: only use last checkin per person on this day
+
+        OptionalDouble avgSecondsOfDayOptional = checkins.stream()
+                .mapToInt(checkin -> checkin.getTime().toLocalTime().toSecondOfDay())
+                .average();
+
+        LocalTime avgCheckOutTime;
+        if (avgSecondsOfDayOptional.isPresent()) {
+            double avgSecondsOfDay = avgSecondsOfDayOptional.getAsDouble();
+            avgCheckOutTime = LocalTime.ofSecondOfDay((long) avgSecondsOfDay);
+        }
+        else
+            avgCheckOutTime = LocalTime.MAX;
+
+        return avgCheckOutTime;
+    }
+
     public Pair<Duration, Boolean> getDayDuration(Person person, LocalDate day) {
         LocalDateTime startOfDay = day.atStartOfDay();
         LocalDateTime startOfNextDay = day.plusDays(1).atStartOfDay();
 
         List<Checkin> checkins = checkinRepository.findByPersonAndCheckedInFalseAndTimeBetweenOrderByTimeDesc(person, startOfDay, startOfNextDay);
+        LocalTime avgCheckOutTime = getAvgCheckOutTime(day);
 
-        Duration duration = Duration.ZERO;
+        Duration totalDuration = Duration.ZERO;
         boolean estimated = false;
         for (Checkin checkin : checkins) {
-            duration = duration.plus(getDuration(checkin));
-            if (checkin.isAuto())
+            Duration duration;
+            if (checkin.isAuto()) {
                 estimated = true;
+                duration = getEstimatedDuration(checkin, avgCheckOutTime);
+            }
+            else {
+                duration = getDuration(checkin);
+            }
+            totalDuration = totalDuration.plus(duration);
         }
 
-        return Pair.of(duration, estimated);
+        return Pair.of(totalDuration, estimated);
     }
 
     public static long ceilMinutes(Duration duration) {

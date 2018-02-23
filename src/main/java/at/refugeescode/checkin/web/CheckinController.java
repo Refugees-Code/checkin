@@ -18,7 +18,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -126,17 +125,20 @@ public class CheckinController {
         return new ResponseEntity<>(new Overview(yearMonth, columns, attendances, avgCheckOutTimes), HttpStatus.OK);
     }
 
-    @GetMapping("/checks/{uid}/{date}")
+    @GetMapping("/checks/{uid}/{yearMonth}")
     @Transactional(readOnly = true)
     public ResponseEntity<List<Checkin>> checksByPersonAndDate(
             @PathVariable("uid") String uid,
-            @PathVariable("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            @PathVariable("yearMonth") YearMonth yearMonth) {
 
         Person person = personRepository.findByUid(uid);
         if (person == null)
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
-        List<Checkin> checks = checkinRepository.findByPersonAndTimeBetweenOrderByTimeDesc(person, date.atStartOfDay(), date.plusDays(1).atStartOfDay());
+        List<Checkin> checks = checkinRepository.findByPersonAndTimeBetweenOrderByTimeDesc(
+                person,
+                yearMonth.atDay(1).atStartOfDay(),
+                yearMonth.atEndOfMonth().plusDays(1).atStartOfDay());
 
         return new ResponseEntity<>(checks, HttpStatus.OK);
     }
@@ -145,7 +147,7 @@ public class CheckinController {
     @Transactional(readOnly = true)
     public ResponseEntity<Checkin> updateTime(
             @PathVariable("id") Long id,
-            @RequestParam("time")  @DateTimeFormat(pattern = "HH:mm") LocalTime time) {
+            @RequestParam("time") @DateTimeFormat(pattern = "HH:mm") LocalTime time) {
 
         Checkin check = checkinRepository.findOne(id);
         if (check == null)

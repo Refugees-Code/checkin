@@ -7,7 +7,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Projection(name = "log", types = Check.class)
-public interface CheckProjection {
+public interface CheckLogProjection {
 
     Long getId();
 

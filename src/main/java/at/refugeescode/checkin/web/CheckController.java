@@ -56,7 +56,7 @@ public class CheckController {
 
     @GetMapping("/people/{uid}/checkin")
     @Transactional(readOnly = false)
-    public ResponseEntity<Check> newCheck(@PathVariable("uid") String uid) {
+    public ResponseEntity<CheckStatusProjection> newCheck(@PathVariable("uid") String uid) {
 
         Check check = checkService.newCheck(uid, false);
 
@@ -66,7 +66,8 @@ public class CheckController {
                 DateTimeFormatter.ofPattern("dd.MM.YYYY HH:mm").format(check.getTime())
         );
 
-        return new ResponseEntity<>(check, HttpStatus.OK);
+        CheckStatusProjection projection = projectionFactory.createProjection(CheckStatusProjection.class, check);
+        return new ResponseEntity<>(projection, HttpStatus.OK);
     }
 
     @GetMapping("/people/{uid}/status")
@@ -127,7 +128,7 @@ public class CheckController {
 
     @GetMapping("/checks/{uid}/{yearMonth}")
     @Transactional(readOnly = true)
-    public ResponseEntity<List<CheckProjection>> checksByPersonAndMonth(
+    public ResponseEntity<List<CheckLogProjection>> checksByPersonAndMonth(
             @PathVariable("uid") String uid,
             @PathVariable("yearMonth") YearMonth yearMonth) {
 
@@ -140,7 +141,7 @@ public class CheckController {
                 yearMonth.atDay(1).atStartOfDay(),
                 yearMonth.atEndOfMonth().plusDays(1).atStartOfDay());
 
-        return new ResponseEntity<>(createProjectionList(CheckProjection.class, checks), HttpStatus.OK);
+        return new ResponseEntity<>(createProjectionList(CheckLogProjection.class, checks), HttpStatus.OK);
     }
 
     @GetMapping("/avg-check-out-time/{date}")

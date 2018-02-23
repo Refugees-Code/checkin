@@ -73,8 +73,9 @@ public class CheckinService {
     @Transactional(readOnly = true)
     public Duration getEstimatedDuration(Checkin check, LocalTime avgCheckOutTime) {
         LocalDateTime time = check.getTime();
+        LocalDateTime avgCheckOutTimeToday = avgCheckOutTime.atDate(time.toLocalDate());
         Optional<Checkin> before = checkinRepository.findFirstByPersonAndTimeBeforeOrderByTimeDesc(check.getPerson(), time);
-        return before.isPresent() ? Duration.between(before.get().getTime(), avgCheckOutTime) : Duration.ZERO;
+        return before.isPresent() ? Duration.between(before.get().getTime(), avgCheckOutTimeToday) : Duration.ZERO;
     }
 
     @Transactional(readOnly = true)
@@ -139,7 +140,6 @@ public class CheckinService {
         LocalDate startOfNextMonth = yearMonth.plusMonths(1).atDay(1);
 
         for (LocalDate day = startOfMonth; day.isBefore(startOfNextMonth); day = day.plusDays(1)) {
-            LocalTime avgCheckOutTime = getAvgCheckOutTime(day);
             avgCheckOutTimes.add(getAvgCheckOutTime(day));
             if (day.getDayOfWeek() == DayOfWeek.SUNDAY) {
                 avgCheckOutTimes.add(null);

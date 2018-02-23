@@ -184,12 +184,12 @@ public class CheckController {
     public ResponseEntity<Map<String, Map<Object, Object>>> dumpCaches() {
         Map<String, Map<Object, Object>> result = new HashMap<>();
         for (String cacheName : cacheManager.getCacheNames()) {
-            log.info("Cache: {}", cacheName);
+            log.trace("Cache: {}", cacheName);
             Cache cache = cacheManager.getCache(cacheName);
             ConcurrentMapCache concurrentMapCache = (ConcurrentMapCache) cache;
             ConcurrentMap<Object, Object> nativeCache = concurrentMapCache.getNativeCache();
             for (Map.Entry<Object, Object> entry : nativeCache.entrySet())
-                log.info("{}: {}", entry.getKey(), entry.getValue());
+                log.trace("{}: {}", entry.getKey(), entry.getValue());
             result.put(cacheName, nativeCache);
         }
         return new ResponseEntity<>(result, HttpStatus.OK);

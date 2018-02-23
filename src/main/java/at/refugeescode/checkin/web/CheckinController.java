@@ -11,14 +11,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.projection.ProjectionFactory;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -141,22 +139,6 @@ public class CheckinController {
                 yearMonth.atEndOfMonth().plusDays(1).atStartOfDay());
 
         return new ResponseEntity<>(checks, HttpStatus.OK);
-    }
-
-    @PutMapping("/update-time/{id}")
-    @Transactional(readOnly = true)
-    public ResponseEntity<Checkin> updateTime(
-            @PathVariable("id") Long id,
-            @RequestParam("time") @DateTimeFormat(pattern = "HH:mm") LocalTime time) {
-
-        Checkin check = checkinRepository.findOne(id);
-        if (check == null)
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-
-        check.setTime(check.getTime().withHour(time.getHour()).withMinute(time.getMinute()));
-        check = checkinRepository.save(check);
-
-        return new ResponseEntity<>(check, HttpStatus.OK);
     }
 
     @GetMapping("/client/summary")

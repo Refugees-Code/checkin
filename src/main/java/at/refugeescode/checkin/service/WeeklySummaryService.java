@@ -1,7 +1,7 @@
 package at.refugeescode.checkin.service;
 
-import at.refugeescode.checkin.domain.Checkin;
-import at.refugeescode.checkin.domain.CheckinRepository;
+import at.refugeescode.checkin.domain.Check;
+import at.refugeescode.checkin.domain.CheckRepository;
 import at.refugeescode.checkin.domain.Person;
 import at.refugeescode.checkin.domain.PersonRepository;
 import lombok.NonNull;
@@ -42,9 +42,9 @@ public class WeeklySummaryService {
     @NonNull
     private final PersonRepository personRepository;
     @NonNull
-    private final CheckinRepository checkinRepository;
+    private final CheckRepository checkRepository;
     @NonNull
-    private final CheckinService checkinService;
+    private final CheckService checkService;
     @NonNull
     private final MailService mailService;
 
@@ -72,10 +72,10 @@ public class WeeklySummaryService {
         for (Person person : personRepository.findByOrderByName()) {
 
             Duration total = Duration.ZERO;
-            List<Checkin> checkins = checkinRepository.findByPersonAndCheckedInFalseOrderByTime(person);
-            for (Checkin checkin : checkins) {
-                if (checkin.getTime().isAfter(startOfLastWeek) && !checkin.getTime().isAfter(startOfToday))
-                    total = total.plus(checkinService.getDuration(checkin));
+            List<Check> checks = checkRepository.findByPersonAndCheckedInFalseOrderByTime(person);
+            for (Check check : checks) {
+                if (check.getTime().isAfter(startOfLastWeek) && !check.getTime().isAfter(startOfToday))
+                    total = total.plus(checkService.getDuration(check));
             }
 
             rowMessageBuilder.append(String.format(SUMMARY_ROW,

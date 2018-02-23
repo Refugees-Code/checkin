@@ -9,7 +9,7 @@
 	<packaging>jar</packaging>
 
 	<name>rc-check-in-backend</name>
-	<description>RefugeesCode Checkin REST Service</description>
+	<description>RefugeesCode Check-in REST Service</description>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>

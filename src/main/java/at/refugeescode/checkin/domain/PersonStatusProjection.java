@@ -11,13 +11,13 @@ public interface PersonStatusProjection {
     @Value("#{target.getShortName()}")
     String getName();
 
-    @Value("#{@checkinService.isCheckedIn(target)}")
+    @Value("#{@checkService.isCheckedIn(target)}")
     boolean isCheckedIn();
 
-    @Value("#{@checkinService.getLastCheckInTime(target)}")
+    @Value("#{@checkService.getLastCheckInTime(target)}")
     Duration getLastDuration();
 
-    @Value("#{@checkinService.getLastWeekDuration(target)}")
+    @Value("#{@checkService.getLastWeekDuration(target)}")
     Duration getWeekDuration();
 
 }

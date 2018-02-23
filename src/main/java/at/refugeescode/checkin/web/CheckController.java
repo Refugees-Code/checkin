@@ -4,7 +4,7 @@ import at.refugeescode.checkin.config.SlackAppender;
 import at.refugeescode.checkin.domain.*;
 import at.refugeescode.checkin.dto.Attendance;
 import at.refugeescode.checkin.dto.Overview;
-import at.refugeescode.checkin.service.CheckinService;
+import at.refugeescode.checkin.service.CheckService;
 import at.refugeescode.checkin.service.PersonService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -26,16 +27,16 @@ import java.util.stream.Collectors;
 @RestController
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
-public class CheckinController {
+public class CheckController {
 
     @NonNull
     private final PersonRepository personRepository;
     @NonNull
     private final PersonService personService;
     @NonNull
-    private final CheckinService checkinService;
+    private final CheckService checkService;
     @NonNull
-    private final CheckinRepository checkinRepository;
+    private final CheckRepository checkRepository;
     @NonNull
     private final ProjectionFactory projectionFactory;
 
@@ -54,17 +55,17 @@ public class CheckinController {
 
     @GetMapping("/people/{uid}/checkin")
     @Transactional(readOnly = false)
-    public ResponseEntity<Checkin> checkin(@PathVariable("uid") String uid) {
+    public ResponseEntity<Check> newCheck(@PathVariable("uid") String uid) {
 
-        Checkin checkin = checkinService.newCheck(uid, false);
+        Check check = checkService.newCheck(uid, false);
 
         log.info(SlackAppender.POST_TO_SLACK, "{} has checked {} at {}",
-                "User '" + checkin.getPerson().getName() + "'",
-                checkin.isCheckedIn() ? "in" : "out",
-                DateTimeFormatter.ofPattern("dd.MM.YYYY HH:mm").format(checkin.getTime())
+                "User '" + check.getPerson().getName() + "'",
+                check.isCheckedIn() ? "in" : "out",
+                DateTimeFormatter.ofPattern("dd.MM.YYYY HH:mm").format(check.getTime())
         );
 
-        return new ResponseEntity<>(checkin, HttpStatus.OK);
+        return new ResponseEntity<>(check, HttpStatus.OK);
     }
 
     @GetMapping("/people/{uid}/status")
@@ -75,7 +76,7 @@ public class CheckinController {
         if (person == null)
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
-        return new ResponseEntity<>(checkinService.isCheckedIn(person), HttpStatus.OK);
+        return new ResponseEntity<>(checkService.isCheckedIn(person), HttpStatus.OK);
     }
 
     @PutMapping("/people/{uid}/toggle")
@@ -100,8 +101,8 @@ public class CheckinController {
         if (person == null)
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
-        List<Checkin> checkins = checkinRepository.findByPerson(person);
-        checkinRepository.delete(checkins);
+        List<Check> checks = checkRepository.findByPerson(person);
+        checkRepository.delete(checks);
 
         personRepository.delete(person);
 
@@ -113,19 +114,19 @@ public class CheckinController {
     public ResponseEntity<Overview> overview(@PathVariable("yearMonth") YearMonth yearMonth) {
 
         List<Person> people = personService.findEnabledUsers();
-        List<String> columns = checkinService.getOverviewColumns(yearMonth);
-        List<String> avgCheckOutTimes = checkinService.getOverviewAvgCheckOutTimes(yearMonth);
+        List<String> columns = checkService.getOverviewColumns(yearMonth);
+        List<String> avgCheckOutTimes = checkService.getOverviewAvgCheckOutTimes(yearMonth);
 
         List<Attendance> attendances = new ArrayList<>();
         for (Person person : people)
-            attendances.add(new Attendance(person.getName(), checkinService.getOverviewDurations(yearMonth, person)));
+            attendances.add(new Attendance(person.getName(), checkService.getOverviewDurations(yearMonth, person)));
 
         return new ResponseEntity<>(new Overview(yearMonth, columns, attendances, avgCheckOutTimes), HttpStatus.OK);
     }
 
     @GetMapping("/checks/{uid}/{yearMonth}")
     @Transactional(readOnly = true)
-    public ResponseEntity<List<CheckinProjection>> checksByPersonAndDate(
+    public ResponseEntity<List<CheckProjection>> checksByPersonAndMonth(
             @PathVariable("uid") String uid,
             @PathVariable("yearMonth") YearMonth yearMonth) {
 
@@ -133,12 +134,19 @@ public class CheckinController {
         if (person == null)
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
-        List<Checkin> checks = checkinRepository.findByPersonAndTimeBetweenOrderByTimeDesc(
+        List<Check> checks = checkRepository.findByPersonAndTimeBetweenOrderByTimeDesc(
                 person,
                 yearMonth.atDay(1).atStartOfDay(),
                 yearMonth.atEndOfMonth().plusDays(1).atStartOfDay());
 
-        return new ResponseEntity<>(createProjectionList(CheckinProjection.class, checks), HttpStatus.OK);
+        return new ResponseEntity<>(createProjectionList(CheckProjection.class, checks), HttpStatus.OK);
+    }
+
+    @GetMapping("/avg-check-out-time/{date}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<String> avgCheckOutTime(@PathVariable("date") LocalDate date) {
+        String avgCheckOutTime = checkService.getAvgCheckOutTime(date).format(DateTimeFormatter.ofPattern("HH:mm"));
+        return new ResponseEntity<>(avgCheckOutTime, HttpStatus.OK);
     }
 
     @GetMapping("/client/summary")

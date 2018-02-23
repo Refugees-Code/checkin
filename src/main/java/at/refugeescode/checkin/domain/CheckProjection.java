@@ -6,8 +6,8 @@ import org.springframework.data.rest.core.config.Projection;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-@Projection(name = "log", types = Checkin.class)
-public interface CheckinProjection {
+@Projection(name = "log", types = Check.class)
+public interface CheckProjection {
 
     boolean isCheckedIn();
 
@@ -15,7 +15,7 @@ public interface CheckinProjection {
 
     LocalDateTime getTime();
 
-    @Value("#{@checkinService.getDuration(target)}")
+    @Value("#{@checkService.getDuration(target)}")
     Duration getDuration();
 
     @Value("#{target.person.name}")

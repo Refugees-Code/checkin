@@ -12,10 +12,10 @@ public interface PersonStatusDetailProjection {
 
     String getName();
 
-    @Value("#{@checkinService.isCheckedIn(target)}")
+    @Value("#{@checkService.isCheckedIn(target)}")
     boolean isCheckedIn();
 
-    @Value("#{@checkinService.getLastCheckInTime(target)}")
+    @Value("#{@checkService.getLastCheckInTime(target)}")
     Duration getLastDuration();
 
     boolean isDisabled();

@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @RequiredArgsConstructor
 @ToString
-public class Checkin {
+@Table(name = "checkin")
+public class Check {
 
     @Id
     @GeneratedValue
@@ -30,7 +31,7 @@ public class Checkin {
 
     private boolean auto;
 
-    public Checkin(Person person, LocalDateTime time, boolean checkedIn, boolean auto) {
+    public Check(Person person, LocalDateTime time, boolean checkedIn, boolean auto) {
         this.person = person;
         this.time = time;
         this.checkedIn = checkedIn;

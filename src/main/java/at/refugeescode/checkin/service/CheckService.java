@@ -1,7 +1,7 @@
 package at.refugeescode.checkin.service;
 
-import at.refugeescode.checkin.domain.Checkin;
-import at.refugeescode.checkin.domain.CheckinRepository;
+import at.refugeescode.checkin.domain.Check;
+import at.refugeescode.checkin.domain.CheckRepository;
 import at.refugeescode.checkin.domain.Person;
 import at.refugeescode.checkin.domain.PersonRepository;
 import lombok.NonNull;
@@ -25,7 +25,7 @@ import java.util.OptionalDouble;
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
-public class CheckinService {
+public class CheckService {
 
     private static final String FORGOT_CHECK_OUT_SUBJECT = "RefugeesCode Attendance - Forgot to check out?";
     private static final String FORGOT_CHECK_OUT_MESSAGE = "Hello %s!<br/><br/>" +
@@ -39,7 +39,7 @@ public class CheckinService {
     private static final String NEW_USER_PREFIX = "new-user-";
 
     @NonNull
-    private final CheckinRepository checkinRepository;
+    private final CheckRepository checkRepository;
     @NonNull
     private final PersonRepository personRepository;
     @NonNull
@@ -49,37 +49,37 @@ public class CheckinService {
     private String webmaster;
 
     @Transactional(readOnly = true)
-    public Optional<Checkin> lastCheck(Person person) {
-        return checkinRepository.findFirstByPersonOrderByTimeDesc(person);
+    public Optional<Check> lastCheck(Person person) {
+        return checkRepository.findFirstByPersonOrderByTimeDesc(person);
     }
 
     @Transactional(readOnly = true)
-    public Optional<Checkin> lastCheckBefore(Person person, LocalDateTime end) {
-        return checkinRepository.findFirstByPersonAndTimeBeforeOrderByTimeDesc(person, end);
+    public Optional<Check> lastCheckBefore(Person person, LocalDateTime end) {
+        return checkRepository.findFirstByPersonAndTimeBeforeOrderByTimeDesc(person, end);
     }
 
     @Transactional(readOnly = true)
-    public Optional<Checkin> lastCheckOut(Person person, LocalDateTime start, LocalDateTime end) {
-        return checkinRepository.findFirstByCheckedInFalseAndPersonAndTimeBetweenOrderByTimeDesc(person, start, end);
+    public Optional<Check> lastCheckOut(Person person, LocalDateTime start, LocalDateTime end) {
+        return checkRepository.findFirstByCheckedInFalseAndPersonAndTimeBetweenOrderByTimeDesc(person, start, end);
     }
 
     @Transactional(readOnly = true)
     public boolean isCheckedIn(Person person) {
-        return lastCheck(person).map(Checkin::isCheckedIn).orElse(false);
+        return lastCheck(person).map(Check::isCheckedIn).orElse(false);
     }
 
     @Transactional(readOnly = true)
-    public Duration getDuration(Checkin check) {
+    public Duration getDuration(Check check) {
         LocalDateTime time = check.getTime();
-        Optional<Checkin> before = lastCheckBefore(check.getPerson(), time);
+        Optional<Check> before = lastCheckBefore(check.getPerson(), time);
         return before.isPresent() ? Duration.between(before.get().getTime(), time) : Duration.ZERO;
     }
 
     @Transactional(readOnly = true)
-    public Duration getEstimatedDuration(Checkin check, LocalTime avgCheckOutTime) {
+    public Duration getEstimatedDuration(Check check, LocalTime avgCheckOutTime) {
         LocalDateTime time = check.getTime();
         LocalDateTime avgCheckOutTimeToday = avgCheckOutTime.atDate(time.toLocalDate());
-        Optional<Checkin> before = lastCheckBefore(check.getPerson(), time);
+        Optional<Check> before = lastCheckBefore(check.getPerson(), time);
         return before.isPresent() ? Duration.between(before.get().getTime(), avgCheckOutTimeToday) : Duration.ZERO;
     }
 
@@ -176,14 +176,14 @@ public class CheckinService {
         LocalDateTime startOfNextDay = day.plusDays(1).atStartOfDay();
 
         List<Person> enabledUsers = personRepository.findByDisabledFalse();
-        List<Checkin> lastCheckOuts = new ArrayList<>(enabledUsers.size());
+        List<Check> lastCheckOuts = new ArrayList<>(enabledUsers.size());
         for (Person person : enabledUsers) {
-            Optional<Checkin> lastCheckOut = lastCheckOut(person, startOfDay, startOfNextDay);
+            Optional<Check> lastCheckOut = lastCheckOut(person, startOfDay, startOfNextDay);
             lastCheckOut.ifPresent(lastCheckOuts::add);
         }
 
         OptionalDouble avgSecondsOfDayOptional = lastCheckOuts.stream()
-                .mapToInt(checkin -> checkin.getTime().toLocalTime().toSecondOfDay())
+                .mapToInt(check -> check.getTime().toLocalTime().toSecondOfDay())
                 .average();
 
         LocalTime avgCheckOutTime;
@@ -202,19 +202,19 @@ public class CheckinService {
         LocalDateTime startOfDay = day.atStartOfDay();
         LocalDateTime startOfNextDay = day.plusDays(1).atStartOfDay();
 
-        List<Checkin> checkins = checkinRepository.findByPersonAndCheckedInFalseAndTimeBetweenOrderByTimeDesc(person, startOfDay, startOfNextDay);
+        List<Check> checks = checkRepository.findByPersonAndCheckedInFalseAndTimeBetweenOrderByTimeDesc(person, startOfDay, startOfNextDay);
         LocalTime avgCheckOutTime = getAvgCheckOutTime(day);
 
         Duration totalDuration = Duration.ZERO;
         boolean estimated = false;
-        for (Checkin checkin : checkins) {
+        for (Check check : checks) {
             Duration duration;
-            if (checkin.isAuto()) {
+            if (check.isAuto()) {
                 estimated = true;
-                duration = getEstimatedDuration(checkin, avgCheckOutTime);
+                duration = getEstimatedDuration(check, avgCheckOutTime);
             }
             else {
-                duration = getDuration(checkin);
+                duration = getDuration(check);
             }
             totalDuration = totalDuration.plus(duration);
         }
@@ -240,12 +240,12 @@ public class CheckinService {
     @Transactional(readOnly = true)
     public Duration getLastCheckInTime(Person person) {
         LocalDateTime now = LocalDateTime.now();
-        Optional<LocalDateTime> lastTime = lastCheck(person).map(Checkin::getTime);
+        Optional<LocalDateTime> lastTime = lastCheck(person).map(Check::getTime);
         return lastTime.isPresent() ? Duration.between(lastTime.get(), now) : null;
     }
 
     @Transactional(readOnly = false)
-    public Checkin newCheck(String uid, boolean auto) {
+    public Check newCheck(String uid, boolean auto) {
         Person person = personRepository.findByUid(uid);
 
         if (person == null) {
@@ -255,12 +255,12 @@ public class CheckinService {
             person = personRepository.save(newUser);
         }
 
-        Optional<Checkin> lastCheck = lastCheck(person);
+        Optional<Check> lastCheck = lastCheck(person);
         LocalDateTime now = LocalDateTime.now();
         boolean checkedIn = lastCheck.map(check -> !check.isCheckedIn()).orElse(true);
 
-        Checkin check = new Checkin(person, now, checkedIn, auto);
-        check = checkinRepository.save(check);
+        Check check = new Check(person, now, checkedIn, auto);
+        check = checkRepository.save(check);
         return check;
     }
 

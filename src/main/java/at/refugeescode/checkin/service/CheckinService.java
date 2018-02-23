@@ -59,6 +59,11 @@ public class CheckinService {
     }
 
     @Transactional(readOnly = true)
+    public Optional<Checkin> lastCheckOut(Person person, LocalDateTime start, LocalDateTime end) {
+        return checkinRepository.findFirstByCheckedInFalseAndPersonAndTimeBetweenOrderByTimeDesc(person, start, end);
+    }
+
+    @Transactional(readOnly = true)
     public boolean isCheckedIn(Person person) {
         return lastCheck(person).map(Checkin::isCheckedIn).orElse(false);
     }
@@ -66,7 +71,7 @@ public class CheckinService {
     @Transactional(readOnly = true)
     public Duration getDuration(Checkin check) {
         LocalDateTime time = check.getTime();
-        Optional<Checkin> before = checkinRepository.findFirstByPersonAndTimeBeforeOrderByTimeDesc(check.getPerson(), time);
+        Optional<Checkin> before = lastCheckBefore(check.getPerson(), time);
         return before.isPresent() ? Duration.between(before.get().getTime(), time) : Duration.ZERO;
     }
 
@@ -74,7 +79,7 @@ public class CheckinService {
     public Duration getEstimatedDuration(Checkin check, LocalTime avgCheckOutTime) {
         LocalDateTime time = check.getTime();
         LocalDateTime avgCheckOutTimeToday = avgCheckOutTime.atDate(time.toLocalDate());
-        Optional<Checkin> before = checkinRepository.findFirstByPersonAndTimeBeforeOrderByTimeDesc(check.getPerson(), time);
+        Optional<Checkin> before = lastCheckBefore(check.getPerson(), time);
         return before.isPresent() ? Duration.between(before.get().getTime(), avgCheckOutTimeToday) : Duration.ZERO;
     }
 
@@ -165,14 +170,19 @@ public class CheckinService {
         return weekTotal;
     }
 
+    @Transactional(readOnly = true)
     public LocalTime getAvgCheckOutTime(LocalDate day) {
         LocalDateTime startOfDay = day.atStartOfDay();
         LocalDateTime startOfNextDay = day.plusDays(1).atStartOfDay();
 
-        List<Checkin> checkins = checkinRepository.findByCheckedInFalseAndAutoFalseAndTimeBetweenOrderByTimeDesc(startOfDay, startOfNextDay);
-        //TODO: only use last checkin per person on this day
+        List<Person> enabledUsers = personRepository.findByDisabledFalse();
+        List<Checkin> lastCheckOuts = new ArrayList<>(enabledUsers.size());
+        for (Person person : enabledUsers) {
+            Optional<Checkin> lastCheckOut = lastCheckOut(person, startOfDay, startOfNextDay);
+            lastCheckOut.ifPresent(lastCheckOuts::add);
+        }
 
-        OptionalDouble avgSecondsOfDayOptional = checkins.stream()
+        OptionalDouble avgSecondsOfDayOptional = lastCheckOuts.stream()
                 .mapToInt(checkin -> checkin.getTime().toLocalTime().toSecondOfDay())
                 .average();
 
@@ -187,6 +197,7 @@ public class CheckinService {
         return avgCheckOutTime;
     }
 
+    @Transactional(readOnly = true)
     public Pair<Duration, Boolean> getDayDuration(Person person, LocalDate day) {
         LocalDateTime startOfDay = day.atStartOfDay();
         LocalDateTime startOfNextDay = day.plusDays(1).atStartOfDay();

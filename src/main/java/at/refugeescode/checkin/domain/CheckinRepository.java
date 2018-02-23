@@ -18,6 +18,8 @@ public interface CheckinRepository extends JpaRepository<Checkin, Long> {
 
     Optional<Checkin> findFirstByPersonAndTimeBeforeOrderByTimeDesc(Person person, LocalDateTime end);
 
+    Optional<Checkin> findFirstByCheckedInFalseAndPersonAndTimeBetweenOrderByTimeDesc(Person person, LocalDateTime start, LocalDateTime end);
+
     List<Checkin> findByPerson(Person person);
 
     List<Checkin> findByPersonOrderByTime(Person person);

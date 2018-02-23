@@ -20,7 +20,7 @@ public class PersonService {
     private final PersonRepository personRepository;
 
     @Transactional(readOnly = true)
-    public List<Person> findEnabledNonNewUsers() {
+    public List<Person> findEnabledUsers() {
         return personRepository.findByDisabledFalse();
     }
 

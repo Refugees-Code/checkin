@@ -115,7 +115,7 @@ public class CheckinController {
     @Transactional(readOnly = true)
     public ResponseEntity<Overview> overview(@PathVariable("yearMonth") YearMonth yearMonth) {
 
-        List<Person> people = personService.findEnabledNonNewUsers();
+        List<Person> people = personService.findEnabledUsers();
         List<String> columns = checkinService.getOverviewColumns(yearMonth);
         List<String> avgCheckOutTimes = checkinService.getOverviewAvgCheckOutTimes(yearMonth);
 
@@ -168,8 +168,8 @@ public class CheckinController {
     @GetMapping("/public/summary")
     @Transactional(readOnly = true)
     public ResponseEntity<List<PersonStatusProjection>> publicSummary() {
-        List<Person> nonNewUsers = personService.findEnabledNonNewUsers();
-        List<PersonStatusProjection> personStatusList = createProjectionList(PersonStatusProjection.class, nonNewUsers);
+        List<Person> enabledUsers = personService.findEnabledUsers();
+        List<PersonStatusProjection> personStatusList = createProjectionList(PersonStatusProjection.class, enabledUsers);
         return new ResponseEntity<>(personStatusList, HttpStatus.OK);
     }
 

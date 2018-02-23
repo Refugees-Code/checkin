@@ -9,6 +9,8 @@ import java.time.LocalDateTime;
 @Projection(name = "log", types = Check.class)
 public interface CheckProjection {
 
+    Long getId();
+
     boolean isCheckedIn();
 
     boolean isAuto();

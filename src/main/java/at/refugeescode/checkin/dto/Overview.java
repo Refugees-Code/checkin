@@ -3,7 +3,6 @@ package at.refugeescode.checkin.dto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.List;
 
@@ -14,5 +13,5 @@ public class Overview {
     protected YearMonth yearMonth;
     protected List<String> columns;
     protected List<Attendance> attendance;
-    protected List<LocalTime> avgCheckOutTimes;
+    protected List<String> avgCheckOutTimes;
 }

@@ -117,7 +117,7 @@ public class CheckinController {
 
         List<Person> people = personService.findEnabledNonNewUsers();
         List<String> columns = checkinService.getOverviewColumns(yearMonth);
-        List<LocalTime> avgCheckOutTimes = checkinService.getOverviewAvgCheckOutTimes(yearMonth);
+        List<String> avgCheckOutTimes = checkinService.getOverviewAvgCheckOutTimes(yearMonth);
 
         List<Attendance> attendances = new ArrayList<>();
         for (Person person : people)

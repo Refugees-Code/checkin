@@ -132,15 +132,16 @@ public class CheckinService {
     }
 
     @Transactional(readOnly = true)
-    public List<LocalTime> getOverviewAvgCheckOutTimes(YearMonth yearMonth) {
+    public List<String> getOverviewAvgCheckOutTimes(YearMonth yearMonth) {
 
-        List<LocalTime> avgCheckOutTimes = new ArrayList<>(yearMonth.lengthOfMonth()+4);
+        List<String> avgCheckOutTimes = new ArrayList<>(yearMonth.lengthOfMonth()+4);
 
         LocalDate startOfMonth = yearMonth.atDay(1);
         LocalDate startOfNextMonth = yearMonth.plusMonths(1).atDay(1);
 
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
         for (LocalDate day = startOfMonth; day.isBefore(startOfNextMonth); day = day.plusDays(1)) {
-            avgCheckOutTimes.add(getAvgCheckOutTime(day));
+            avgCheckOutTimes.add(getAvgCheckOutTime(day).format(timeFormatter));
             if (day.getDayOfWeek() == DayOfWeek.SUNDAY) {
                 avgCheckOutTimes.add(null);
             }

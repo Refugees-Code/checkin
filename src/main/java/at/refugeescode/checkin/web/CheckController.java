@@ -8,7 +8,6 @@ import at.refugeescode.checkin.dto.Summary;
 import at.refugeescode.checkin.service.CheckService;
 import at.refugeescode.checkin.service.OverviewService;
 import at.refugeescode.checkin.service.PersonService;
-import com.google.common.collect.Iterables;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +25,10 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController

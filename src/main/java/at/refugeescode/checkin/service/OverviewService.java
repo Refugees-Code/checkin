@@ -1,7 +1,6 @@
 package at.refugeescode.checkin.service;
 
 import at.refugeescode.checkin.domain.Check;
-import at.refugeescode.checkin.domain.CheckRepository;
 import at.refugeescode.checkin.domain.Person;
 import at.refugeescode.checkin.dto.Summary;
 import lombok.NonNull;
@@ -93,7 +92,9 @@ public class OverviewService {
 
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
         for (LocalDate day = startOfMonth; day.isBefore(startOfNextMonth); day = day.plusDays(1)) {
-            avgCheckOutTimes.add(checkService.getAvgCheckOutTime(day).format(timeFormatter));
+            LocalTime avgCheckOutTime = checkService.getAvgCheckOutTime(day);
+            String formattedTime = avgCheckOutTime.equals(LocalTime.MAX) ? "" : avgCheckOutTime.format(timeFormatter);
+            avgCheckOutTimes.add(formattedTime);
             if (day.getDayOfWeek() == DayOfWeek.SUNDAY) {
                 avgCheckOutTimes.add(null);
             }

@@ -28,12 +28,12 @@ public class Person {
 
     @NonNull
     @NotBlank
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
 
     @NonNull
     @NotBlank
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
     private String slackHandle;

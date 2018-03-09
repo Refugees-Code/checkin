@@ -8,13 +8,14 @@ import at.refugeescode.checkin.dto.Summary;
 import at.refugeescode.checkin.service.CheckService;
 import at.refugeescode.checkin.service.OverviewService;
 import at.refugeescode.checkin.service.PersonService;
+import com.google.common.collect.Iterables;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.concurrent.ConcurrentMapCache;
+import org.springframework.cache.jcache.JCacheCache;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,11 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -186,11 +183,14 @@ public class CheckController {
         for (String cacheName : cacheManager.getCacheNames()) {
             log.trace("Cache: {}", cacheName);
             Cache cache = cacheManager.getCache(cacheName);
-            ConcurrentMapCache concurrentMapCache = (ConcurrentMapCache) cache;
-            ConcurrentMap<Object, Object> nativeCache = concurrentMapCache.getNativeCache();
-            for (Map.Entry<Object, Object> entry : nativeCache.entrySet())
+            JCacheCache jCacheCache = (JCacheCache) cache;
+            javax.cache.Cache<Object, Object> nativeCache = jCacheCache.getNativeCache();
+            Map<Object, Object> cacheMap = new HashMap<>();
+            for (javax.cache.Cache.Entry<Object, Object> entry : nativeCache) {
                 log.trace("{}: {}", entry.getKey(), entry.getValue());
-            result.put(cacheName, nativeCache);
+                cacheMap.put(entry.getKey(), entry.getValue());
+            }
+            result.put(cacheName, cacheMap);
         }
         return new ResponseEntity<>(result, HttpStatus.OK);
     }

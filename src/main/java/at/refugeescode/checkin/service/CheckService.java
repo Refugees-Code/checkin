@@ -83,7 +83,8 @@ public class CheckService {
         LocalDateTime time = check.getTime();
         LocalDateTime avgCheckOutTimeToday = avgCheckOutTime.atDate(time.toLocalDate());
         Optional<Check> before = lastCheckBefore(check.getPerson(), time);
-        return before.isPresent() ? Duration.between(before.get().getTime(), avgCheckOutTimeToday) : Duration.ZERO;
+        return before.isPresent() && before.get().getTime().isBefore(avgCheckOutTimeToday) ?
+                Duration.between(before.get().getTime(), avgCheckOutTimeToday) : Duration.ZERO;
     }
 
     @Transactional(readOnly = true)
